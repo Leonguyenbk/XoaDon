@@ -1,0 +1,72 @@
+Số tờ: 619801, Số thửa: 11
+Số tờ: 619800, Số thửa: 20014
+Số tờ: 619802, Số thửa: 85000505
+Số tờ: 235, Số thửa: 1500001
+Số tờ: 619800, Số thửa: 600131652
+Số tờ: 259, Số thửa: 548
+Số tờ: 619801, Số thửa: 11, Mã GCN: BR 800685
+Số tờ: 619800, Số thửa: 20014, Mã GCN: BR 800463
+Số tờ: 619802, Số thửa: 85000505, Mã GCN: CB 676437
+Số tờ: 235, Số thửa: 1500001, Mã GCN: AB 123292
+Số tờ: 619800, Số thửa: 600131652, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 259, Số thửa: 548, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 259, Số thửa: 595, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 619803, Số thửa: 62000403, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 236, Số thửa: 107, Mã GCN: AA 00049658
+Số tờ: 236, Số thửa: 182, Mã GCN: CX 782162
+Số tờ: 257, Số thửa: 825, Mã GCN: AA 00755905
+Số tờ: 257, Số thửa: 826, Mã GCN: AA 00755906
+Số tờ: 258, Số thửa: 601, Mã GCN: AA 00755908
+Số tờ: 210, Số thửa: 291, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 235, Số thửa: 2830000, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 619802, Số thửa: 113000407, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 619802, Số thửa: 352, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 256, Số thửa: 2000000, Mã GCN: G 101558
+Số tờ: 256, Số thửa: 107, Mã GCN: G 101558
+Số tờ: 256, Số thửa: 109, Mã GCN: G 101558
+Số tờ: 256, Số thửa: 142, Mã GCN: G 101558
+Số tờ: 254, Số thửa: 93, Mã GCN: G 101558
+Số tờ: 254, Số thửa: 343, Mã GCN: DO 317683
+Số tờ: 190, Số thửa: 227, Mã GCN: BX 340787
+Số tờ: 259, Số thửa: 503, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 61001, Số thửa: 70, Mã GCN: T 232335
+Số tờ: 213, Số thửa: 192, Mã GCN: DI 414706
+Số tờ: 234, Số thửa: 131, Mã GCN: W 786184
+Số tờ: 234, Số thửa: 131, Mã GCN: W 786184
+Số tờ: 235, Số thửa: 163, Mã GCN: Đ 298632
+Số tờ: 235, Số thửa: 268, Mã GCN: DI 414107
+Số tờ: 235, Số thửa: 163, Mã GCN: Đ 298632
+Số tờ: 213, Số thửa: 192, Mã GCN: DI 414706
+Số tờ: 234, Số thửa: 734, Mã GCN: AD 192946
+Số tờ: 190, Số thửa: 337, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 61981213, Số thửa: 8, Mã GCN: BS 973881
+Số tờ: 194, Số thửa: 910000, Mã GCN: DL 202954
+Số tờ: 236, Số thửa: 360, Mã GCN: DL 233199
+Số tờ: 236, Số thửa: 360, Mã GCN: DL 233199
+Số tờ: 236, Số thửa: 360, Mã GCN: DL 233199
+Số tờ: 235, Số thửa: 330, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 232, Số thửa: 274, Mã GCN: DL 233249
+Số tờ: 46, Số thửa: 5, Mã GCN: AA 00713577
+Số tờ: 46, Số thửa: 58, Mã GCN: G 712017
+Số tờ: 47, Số thửa: 1205, Mã GCN: AG 490682
+Số tờ: 149, Số thửa: 739, Mã GCN: AA 02161850
+Số tờ: 64, Số thửa: 77, Mã GCN: CA 561925
+Số tờ: 150, Số thửa: 366, Mã GCN: AA 02233332
+Số tờ: 190, Số thửa: 226, Mã GCN: BX 340786
+Số tờ: 257, Số thửa: 109, Mã GCN: AD 088182
+Số tờ: 165, Số thửa: 13, Mã GCN: BX 340788
+Số tờ: 161, Số thửa: 13, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 234, Số thửa: 65, Mã GCN: T 094538
+Số tờ: 235, Số thửa: 271, Mã GCN: DI 414136
+Số tờ: 234, Số thửa: 380, Mã GCN: BK 137600
+Số tờ: 234, Số thửa: 380, Mã GCN: BK 137600
+Số tờ: 190, Số thửa: 386, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 237, Số thửa: 75, Mã GCN: G 101915
+Số tờ: 236, Số thửa: 289, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 234, Số thửa: 681, Mã GCN: DL 202466
+Số tờ: 232, Số thửa: 9, Mã GCN: G 101697
+Số tờ: 46, Số thửa: 1095, Mã GCN: CX 654626
+Số tờ: 148, Số thửa: 157, Mã GCN: BĐ 604937
+Số tờ: 147, Số thửa: 35, Mã GCN: BĐ 604431
+Số tờ: 235, Số thửa: 163, Mã GCN: Đ 298632
+Số tờ: 46, Số thửa: 684, Mã GCN: AA 02152437

@@ -45,44 +45,6 @@ class UILogger:
         self.text_widget.configure(state="disabled")
 
 # ============== WAITERS / HELPERS ==============
-def _is_enabled_vakata_item(driver, a_el):
-    """Một item bật nếu KHÔNG có class disabled/aria-disabled."""
-    try:
-        cls = (a_el.get_attribute("class") or "").lower()
-        aria = (a_el.get_attribute("aria-disabled") or "").lower()
-        li = a_el.find_element(By.XPATH, "./ancestor::li[1]")
-        li_cls = (li.get_attribute("class") or "").lower()
-        return ("disabled" not in cls) and ("disabled" not in li_cls) and (aria not in ["true", "1"])
-    except Exception:
-        return False
-
-def _ensure_node_selected(driver, anchor):
-    """jsTree yêu cầu node được select thì menu mới bật."""
-    try:
-        li = anchor.find_element(By.XPATH, "./ancestor::li[1]")
-        selected = "jstree-clicked" in (anchor.get_attribute("class") or "")
-        if not selected:
-            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", anchor)
-            try:
-                anchor.click()
-            except Exception:
-                driver.execute_script("arguments[0].click();", anchor)
-            # chờ chọn xong
-            WebDriverWait(driver, 3).until(
-                lambda d: "jstree-clicked" in (anchor.get_attribute("class") or "")
-                         or "jstree-selected" in (li.get_attribute("class") or "")
-            )
-    except Exception:
-        pass
-
-def _open_context_menu(driver, anchor):
-    """Mở menu ngữ cảnh ổn định."""
-    ActionChains(driver).move_to_element(anchor).pause(0.05).context_click(anchor).perform()
-    # menu visible
-    WebDriverWait(driver, 5).until(EC.visibility_of_element_located((
-        By.XPATH, "//ul[contains(@class,'vakata-context')][contains(@style,'display') and not(contains(@style,'display: none'))]"
-    )))
-
 def wait_xuly_modal(driver, timeout=20):
     """
     Đợi modal Xử lý đơn đăng ký hiển thị; trả về WebElement modal.
@@ -509,36 +471,18 @@ def hard_jump_pagination(driver, page_number, table_id="tblTTThuaDat", timeout=1
     cur2 = driver.execute_script(f"return jQuery('#{table_id}').DataTable().page.info().page + 1;")
     return cur2 == page_number
 
-def click_duyet_ghi_de(driver, timeout=15, table_id="tblTTThuaDat"):
-    wait = WebDriverWait(driver, timeout)
-    btn = wait.until(EC.element_to_be_clickable((By.ID, "btnDropTTTD")))
-    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn)
-    try:
-        btn.click()
-    except ElementClickInterceptedException:
-        driver.execute_script("arguments[0].click();", btn)
-    item = wait.until(EC.presence_of_element_located((By.ID, "btnDuyetGhiDeTTTD")))
-    for _ in range(3):
-        vis = driver.execute_script("""
-            const el = arguments[0];
-            const r = el.getBoundingClientRect();
-            const s = getComputedStyle(el);
-            return r.width > 0 && r.height > 0 && s.display !== 'none' && s.visibility !== 'hidden';
-        """, item)
-        if vis: break
+def all_jconfirm_closed(driver):
+    """True nếu không còn popup jConfirm nào đang hiển thị."""
+    modals = driver.find_elements(By.CSS_SELECTOR, ".jconfirm-scrollpane")
+    if not modals:
+        return True
+    for m in modals:
         try:
-            btn.click()
+            if m.is_displayed():
+                return False
         except Exception:
-            driver.execute_script("arguments[0].click();", btn)
-    wait.until(EC.element_to_be_clickable((By.ID, "btnDuyetGhiDeTTTD")))
-    try:
-        item.click()
-    except ElementClickInterceptedException:
-        driver.execute_script("arguments[0].click();", item)
-
-    # 👉 xác nhận nhanh nếu có + chờ xử lý ngắn
-    _ = quick_confirm_if_present(driver, soft_timeout=1.0)
-    wait_processing_quick(driver, table_id=table_id, max_wait=6)
+            continue
+    return True
 
 def switch_to_frame_having(driver, by, value, timeout=8):
     driver.switch_to.default_content()
@@ -812,7 +756,6 @@ def kiem_tra_tree_gcn(driver):
     # Nếu KHÔNG có anchor nào => không có dữ liệu
     if not anchors:
         print("❌ Không có dữ liệu trong #treeGiayChungNhan")
-        return False
 
     # Lấy text của anchor đầu tiên
     text = anchors[0].text.strip()
@@ -822,12 +765,75 @@ def kiem_tra_tree_gcn(driver):
     match = re.search(pattern, text)
 
     if match:
-        print(f"✅ Có dữ liệu: {match.group(1)}")
-        return True
+        gcn_code = match.group(1).strip()
+        print(f"✅ Có dữ liệu GCN: {gcn_code}")
+        return True, gcn_code
     else:
         print("❌ Không tìm thấy 'Số phát hành' trong dữ liệu")
-        return False
+        return False, None
     
+def perform_bo_don(driver, wait, logger: UILogger, reason="", so_to=None, so_thua=None, gcn_code=None):
+    """
+    Hàm riêng để thực hiện thao tác "Bỏ đơn".
+    """
+    log_message = f"✅ {reason} Tiến hành bỏ đơn..."
+    logger.log(log_message)
+
+    # Nếu lý do là có GCN hoặc bị thế chấp, lưu thông tin thửa đất ra file txt
+    if ("GCN" in reason or "thế chấp" in reason) and so_to and so_thua:
+        try:
+            with open("thua_dat_co_gcn.txt", "a", encoding="utf-8") as f:
+                f.write(f"Số tờ: {so_to}, Số thửa: {so_thua}, Mã GCN: {gcn_code or 'N/A'}\n")
+            logger.log(f"💾 Đã lưu thông tin thửa đất có GCN vào file 'thua_dat_co_gcn.txt'.")
+        except Exception as e:
+            logger.log(f"⚠️ Lỗi khi ghi file txt: {e}")
+            print(f"⚠️ Lỗi khi ghi file txt: {e}")
+    
+    try:
+        btn_bo_don = wait.until(EC.element_to_be_clickable((By.ID, "btnBoDonDangKy")))
+        btn_bo_don.click()
+
+        # 1. Chờ popup xác nhận xuất hiện
+        wait.until(
+            EC.visibility_of_element_located((
+                By.CSS_SELECTOR,
+                "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open"
+            ))
+        )
+        print("👉 Popup xác nhận 'Bỏ đơn' đã xuất hiện")
+
+        # 2. Chờ đúng nút cam (btn btn-orange) xuất hiện và có thể click
+        btn_orange = wait.until(
+            EC.element_to_be_clickable((
+                By.CSS_SELECTOR,
+                "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open .jconfirm-buttons button.btn.btn-orange"
+            ))
+        )
+        print("👉 Nút cam 'Đồng ý' đã sẵn sàng")
+
+        # 3. Nhấn nút cam
+        btn_orange.click()
+        print("👉 Đã nhấn nút cam 'Đồng ý'")
+
+        # 4. Chờ popup đóng hoàn toàn
+        wait.until(
+            EC.invisibility_of_element_located((
+                By.CSS_SELECTOR,
+                "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open"
+            ))
+        )
+        print("✅ Popup 'Bỏ đơn' đã đóng")
+
+        WebDriverWait(driver, 15).until(lambda d: all_jconfirm_closed(d))
+        print("✅ Tất cả popup đã đóng – Bỏ đơn thành công!")
+        logger.log("✅ Thao tác 'Bỏ đơn' hoàn tất.")
+        return True
+
+    except Exception as e:
+        logger.log(f"❌ Lỗi trong quá trình 'Bỏ đơn': {e}")
+        print(f"❌ Lỗi trong quá trình 'Bỏ đơn': {e}")
+        return True # Vẫn trả về True để vòng lặp chính biết cần mở lại modal
+
 def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
     """
     Thực hiện tìm kiếm và xử lý một thửa đất trong modal tra cứu đã mở.
@@ -866,91 +872,103 @@ def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
         wait_query_done(driver, timeout=60)
         click_step_GiayChungNhan(driver, timeout=30)
         wait_query_done(driver, timeout=60)
-        match = kiem_tra_tree_gcn(driver)
+        match, gcn_code = kiem_tra_tree_gcn(driver)
         print("Kết quả kiểm tra GCN:", match)
-        logger.log(f"👉 Kết quả kiểm tra GCN: {'Có dữ liệu {match}' if match else 'Không có dữ liệu'}.")
+        logger.log(f"👉 Kết quả kiểm tra GCN: {'Có dữ liệu - ' + (gcn_code or '') if match else 'Không có dữ liệu'}.")
 
         if not match:
+ # ===== XÓA ĐƠN ĐĂNG KÝ =====
             try:
                 btn_xoa = wait.until(EC.element_to_be_clickable((By.ID, "btnXoaDonDangKy")))
+                driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn_xoa)
                 btn_xoa.click()
                 print("👉 Đã nhấn nút Xóa đơn đăng ký")
             except Exception as e:
-                print(f"❌ Không tìm thấy nút Xóa đơn đăng ký: {e}")
+                print(f"❌ Không tìm thấy hoặc không click được nút Xóa đơn đăng ký: {e}")
                 logger.log("❌ Không tìm thấy nút Xóa đơn đăng ký.")
-                return True # Vẫn trả về True để quay lại và mở lại modal
+                return True  # cho vòng ngoài chạy tiếp
+            
+            # ---- POPUP 1: ĐỒNG Ý / KHÔNG ----
             try:
-                confirm_button = wait.until(EC.element_to_be_clickable((
-                    By.CSS_SELECTOR, "div.jconfirm.jconfirm-open div.jconfirm-buttons button.btn.btn-orange"
+
+                # chờ popup hiện
+                wait.until(EC.visibility_of_element_located((
+                    By.CSS_SELECTOR, "div.jconfirm.jconfirm-open .jconfirm-scrollpane"
                 )))
-                print("👉 Popup xác nhận đã hiện, nhấn nút màu cam")
-                confirm_button.click()
-            except Exception:
-                print("❌ Không thấy popup xác nhận khi xóa hoặc không nhấn được!")
+
+                dongy_btn = wait.until(EC.element_to_be_clickable((
+                    By.CSS_SELECTOR,
+                    "div.jconfirm.jconfirm-open .jconfirm-buttons button.btn.btn-orange"
+                )))
+                print("👉 Popup xác nhận đã hiện, nhấn ĐỒNG Ý")
+
+                try:
+                    dongy_btn.click()
+                except ElementClickInterceptedException:
+                    driver.execute_script("arguments[0].click();", dongy_btn)
+                
+                wait_query_done(driver, timeout=60)
+                # ---- KIỂM TRA POPUP THẾ CHẤP ----
+                is_mortgaged = False
+                try: # Thử kiểm tra xem có popup báo thế chấp không
+                    jconfirm_message = driver.find_element(By.CSS_SELECTOR, ".jconfirm-box .jconfirm-message")
+                    print(jconfirm_message.text)
+                    if "đang thế chấp" in jconfirm_message.text:
+                        is_mortgaged = True
+                        print("⚠️ Phát hiện popup GCN đang thế chấp. Sẽ tiến hành bỏ đơn.")
+                        
+                        # Đóng popup thông báo thế chấp
+                        close_btn = jconfirm_message.find_element(By.XPATH, ".//ancestor::div[contains(@class, 'jconfirm-box')]//button[normalize-space()='Đồng ý']")
+                        close_btn.click()
+                        WebDriverWait(driver, 10).until(lambda d: all_jconfirm_closed(d))                        
+                        # Gọi hàm thực hiện "Bỏ đơn" và thoát
+                        return perform_bo_don(driver, wait, logger, reason="GCN đang thế chấp.", so_to=so_to, so_thua=so_thua, gcn_code="Không xác định (báo lỗi)")
+                except Exception as check_err:
+                    print(f"Không kiểm tra được popup thế chấp, bỏ qua: {check_err}")
+            except Exception as e:
+                print(f"❌ Không thấy hoặc không click được nút ĐỒNG Ý: {e}")
                 logger.log("❌ Không thấy popup xác nhận khi xóa.")
                 return True
 
+            # Nếu không phải trường hợp thế chấp, thì đây là luồng xóa thành công
+            if not is_mortgaged:
+                logger.log("❌ Không có dữ liệu GCN. Đơn đăng ký đã bị xóa.")
+
+            # ---- POPUP 2: OK ----
             try:
-                ok_button = wait.until(EC.element_to_be_clickable(
-                    (By.CSS_SELECTOR, "div.jconfirm.jconfirm-open .jconfirm-buttons button")
+                selector = (
+                "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open "
+                "div.jconfirm-buttons > button"
+            )
+                wait = WebDriverWait(driver, 60)
+                # Chờ element xuất hiện trong DOM
+                btn = wait.until(EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, selector)
                 ))
-                print("👉 Nút OK trong popup đã sẵn sàng, nhấn OK")
-                ok_button.click()
-            except Exception:
-                print("❌ Không tìm thấy nút OK trong popup xác nhận cuối cùng")
+
+                # Chờ nó hiển thị & clickable
+                btn = wait.until(EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, selector)
+                ))
+
+                btn.click()
+                print("👉 Đã nhấn nút OK jConfirm thành công") 
+
+            except Exception as e:
+                print(f"❌ Không tìm thấy / không click được nút OK: {e}")
+                # vẫn tiếp tục chờ đóng popup phía dưới
 
             try:
-                wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, "div.jconfirm.jconfirm-open")))
-                print("✅ Popup đã đóng – Xóa đơn thành công!")
-                logger.log("❌ Không có dữ liệu GCN. Đơn đăng ký đã bị xóa.")
+                WebDriverWait(driver, 15).until(lambda d: all_jconfirm_closed(d))
+                if not is_mortgaged:
+                    print("✅ Tất cả popup đã đóng – Xóa đơn thành công!")
             except Exception:
                 print("⚠ Popup không biến mất đúng hạn, nhưng có thể đã xử lý xong")
                 logger.log("⚠ Thao tác xóa hoàn tất nhưng popup không tự đóng.")
+
         else:
-            logger.log("✅ Thửa đất có GCN, cần bỏ đơn. Tìm thửa tiếp theo...")
-            btn_bo_don = wait.until(EC.element_to_be_clickable((By.ID, "btnBoDonDangKy")))
-            btn_bo_don.click()
-            try:
-                wait.until(
-                    EC.visibility_of_element_located((
-                        By.CSS_SELECTOR,
-                        "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open"
-                    ))
-                )
-                print("👉 Popup xác nhận đã xuất hiện")
-            except:
-                print("❌ Không tìm thấy popup jConfirm")
-
-            # 2. Chờ đúng nút cam (btn btn-orange) xuất hiện và có thể click
-            try:
-                btn_orange = wait.until(
-                    EC.element_to_be_clickable((
-                        By.CSS_SELECTOR,
-                        "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open .jconfirm-buttons button.btn.btn-orange"
-                    ))
-                )
-                print("👉 Nút cam đã sẵn sàng")
-            except:
-                print("❌ Không tìm thấy nút cam .btn.btn-orange trong popup")
-
-            # 3. Nhấn nút cam
-            try:
-                btn_orange.click()
-                print("👉 Đã nhấn nút cam OK")
-            except:
-                print("❌ Lỗi khi click nút cam")
-
-            # 4. Chờ popup đóng hoàn toàn
-            try:
-                wait.until(
-                    EC.invisibility_of_element_located((
-                        By.CSS_SELECTOR,
-                        "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open"
-                    ))
-                )
-                print("✅ Popup đã đóng")
-            except:
-                print("⚠ Popup không đóng hoàn toàn đúng hạn")
+            # Thửa đất có GCN, gọi hàm thực hiện "Bỏ đơn"
+            return perform_bo_don(driver, wait, logger, reason="Thửa đất đã có GCN.", so_to=so_to, so_thua=so_thua, gcn_code=gcn_code)
         
         return True
 
@@ -1151,7 +1169,16 @@ def main():
                 for i, (row_num, so_to, so_thua) in enumerate(plots_to_process):
                     logger.log(f"--- Xử lý thửa {i+1}/{len(plots_to_process)}: Tờ {so_to}, Thửa {so_thua} (Dòng {row_num}) ---")
 
-                    found_and_processed = search_and_process_plot(driver, wait, logger, so_to, so_thua)
+                    # Biến 'match' được trả về từ hàm search_and_process_plot
+                    # sẽ được dùng để quyết định có cần mở lại modal hay không.
+                    # Tuy nhiên, logic mới xử lý thế chấp sẽ phức tạp hơn.
+                    # Ta sẽ gọi hàm và để nó tự xử lý.
+                    # Nếu nó trả về True, nghĩa là một hành động (xóa/bỏ) đã diễn ra
+                    # và modal đã bị đóng.
+                    processed = search_and_process_plot(driver, wait, logger, so_to, so_thua)
+
+                    # Nếu thửa đất không tìm thấy (processed=False), modal vẫn mở, không cần làm gì.
+                    # Nếu đã xử lý (processed=True), modal đã đóng, cần mở lại ở dưới.
 
                     # Tô màu dòng sau khi xử lý
                     logger.log(f"🎨 Tô màu dòng {row_num} trong file Excel.")
@@ -1166,7 +1193,7 @@ def main():
                         except Exception as save_err:
                             logger.log(f"⚠️ Lỗi khi lưu file Excel: {save_err}")
 
-                    if found_and_processed:
+                    if processed:
                         # Modal tra cứu đã đóng sau khi xử lý. Mở lại để tìm thửa tiếp theo.
                         logger.log("🔄 Mở lại cửa sổ tra cứu cho thửa tiếp theo...")
                         tra_cuu_button = wait.until(EC.element_to_be_clickable((By.ID, "btnChonDonDangKy")))
