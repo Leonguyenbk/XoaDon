@@ -1,0 +1,35 @@
+            try:
+                btn_xoa = wait.until(EC.element_to_be_clickable((By.ID, "btnXoaDonDangKy")))
+                btn_xoa.click()
+                print("👉 Đã nhấn nút Xóa đơn đăng ký")
+            except Exception as e:
+                print(f"❌ Không tìm thấy nút Xóa đơn đăng ký: {e}")
+                logger.log("❌ Không tìm thấy nút Xóa đơn đăng ký.")
+                return True # Vẫn trả về True để quay lại và mở lại modal
+            try:
+                confirm_button = wait.until(EC.element_to_be_clickable((
+                    By.CSS_SELECTOR, "div.jconfirm.jconfirm-open div.jconfirm-buttons button.btn.btn-orange"
+                )))
+                print("👉 Popup xác nhận đã hiện, nhấn nút màu cam")
+                confirm_button.click()
+            except Exception:
+                print("❌ Không thấy popup xác nhận khi xóa hoặc không nhấn được!")
+                logger.log("❌ Không thấy popup xác nhận khi xóa.")
+                return True
+
+            try:
+                ok_button = wait.until(EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, "div.jconfirm.jconfirm-open .jconfirm-buttons button")
+                ))
+                print("👉 Nút OK trong popup đã sẵn sàng, nhấn OK")
+                ok_button.click()
+            except Exception:
+                print("❌ Không tìm thấy nút OK trong popup xác nhận cuối cùng")
+
+            try:
+                wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, "div.jconfirm.jconfirm-open")))
+                print("✅ Popup đã đóng – Xóa đơn thành công!")
+                logger.log("❌ Không có dữ liệu GCN. Đơn đăng ký đã bị xóa.")
+            except Exception:
+                print("⚠ Popup không biến mất đúng hạn, nhưng có thể đã xử lý xong")
+                logger.log("⚠ Thao tác xóa hoàn tất nhưng popup không tự đóng.")
