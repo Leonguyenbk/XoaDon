@@ -70,3 +70,334 @@ Số tờ: 148, Số thửa: 157, Mã GCN: BĐ 604937
 Số tờ: 147, Số thửa: 35, Mã GCN: BĐ 604431
 Số tờ: 235, Số thửa: 163, Mã GCN: Đ 298632
 Số tờ: 46, Số thửa: 684, Mã GCN: AA 02152437
+Số tờ: 110, Số thửa: 28, Mã GCN: AG 414460
+Số tờ: 109, Số thửa: 17, Mã GCN: DL 233212
+Số tờ: 101, Số thửa: 279, Mã GCN: DL 233417
+Số tờ: 111, Số thửa: 60, Mã GCN: AE 354247
+Số tờ: 118, Số thửa: 218, Mã GCN: AE 354249
+Số tờ: 118, Số thửa: 156, Mã GCN: AE 354250
+Số tờ: 101, Số thửa: 1039, Mã GCN: AA 01645000
+Số tờ: 118, Số thửa: 335, Mã GCN: AK 660567
+Số tờ: 118, Số thửa: 345, Mã GCN: AK 660567
+Số tờ: 118, Số thửa: 463, Mã GCN: AE 354251
+Số tờ: 46, Số thửa: 1144, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 118, Số thửa: 464, Mã GCN: AE 354252
+Số tờ: 118, Số thửa: 408, Mã GCN: AE 354253
+Số tờ: 118, Số thửa: 404, Mã GCN: AE 354255
+Số tờ: 118, Số thửa: 405, Mã GCN: AE 354256
+Số tờ: 118, Số thửa: 406, Mã GCN: AE 354256
+Số tờ: 118, Số thửa: 388, Mã GCN: AE 354257
+Số tờ: 117, Số thửa: 491, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 2000103, Số thửa: 152, Mã GCN: AO 810104
+Số tờ: 118, Số thửa: 390, Mã GCN: AE 354258
+Số tờ: 118, Số thửa: 403, Mã GCN: AE 354258
+Số tờ: 118, Số thửa: 389, Mã GCN: AE 354259
+Số tờ: 118, Số thửa: 346, Mã GCN: AE 354260
+Số tờ: 118, Số thửa: 344, Mã GCN: AE 354261
+Số tờ: 118, Số thửa: 300, Mã GCN: AE 354263
+Số tờ: 118, Số thửa: 299, Mã GCN: AE 354264
+Số tờ: 258, Số thửa: 87, Mã GCN: AD 088073
+Số tờ: 118, Số thửa: 407, Mã GCN: AE 354254
+Số tờ: 118, Số thửa: 447, Mã GCN: AE 354254
+Số tờ: 65, Số thửa: 563, Mã GCN: AG 783382
+Số tờ: 65, Số thửa: 1038, Mã GCN: DL 233842
+Số tờ: 117, Số thửa: 490, Mã GCN: Không xác định (báo lỗi)
+Số tờ: 102, Số thửa: 1098, Mã GCN: G 127597
+Số tờ: 46, Số thửa: 1102, Mã GCN: DL 233843
+Số tờ: 49, Số thửa: 774, Mã GCN: N/A
+Số tờ: 50, Số thửa: 334, Mã GCN: N/A
+Số tờ: 37, Số thửa: 91, Mã GCN: N/A
+Số tờ: 46, Số thửa: 1128, Mã GCN: N/A
+Số tờ: 200057, Số thửa: 956, Mã GCN: N/A
+Số tờ: 60, Số thửa: 50, Mã GCN: N/A
+Số tờ: 62, Số thửa: 598, Mã GCN: N/A
+Số tờ: 54, Số thửa: 99, Mã GCN: N/A
+Số tờ: 63, Số thửa: 687, Mã GCN: N/A
+Số tờ: 56, Số thửa: 447, Mã GCN: N/A
+Số tờ: 46, Số thửa: 1107, Mã GCN: N/A
+Số tờ: 42, Số thửa: 535, Mã GCN: N/A
+Số tờ: 43, Số thửa: 12, Mã GCN: N/A
+Số tờ: 49, Số thửa: 772, Mã GCN: N/A
+Số tờ: 46, Số thửa: 1143, Mã GCN: N/A
+Số tờ: 48, Số thửa: 1233, Mã GCN: N/A
+Số tờ: 65, Số thửa: 86, Mã GCN: N/A
+Số tờ: 51, Số thửa: 1163, Mã GCN: N/A
+Số tờ: 64, Số thửa: 786, Mã GCN: N/A
+Số tờ: 52, Số thửa: 432, Mã GCN: N/A
+Số tờ: 47, Số thửa: 1423, Mã GCN: N/A
+Số tờ: 46, Số thửa: 1135, Mã GCN: N/A
+Số tờ: 46, Số thửa: 1136, Mã GCN: N/A
+Số tờ: 51, Số thửa: 1096, Mã GCN: N/A
+Số tờ: 200081, Số thửa: 828, Mã GCN: N/A
+Số tờ: 43, Số thửa: 97, Mã GCN: N/A
+Số tờ: 51, Số thửa: 1175, Mã GCN: N/A
+Số tờ: 46, Số thửa: 1153, Mã GCN: N/A
+Số tờ: 51, Số thửa: 1176, Mã GCN: N/A
+Số tờ: 51, Số thửa: 1173, Mã GCN: N/A
+Số tờ: 41, Số thửa: 226, Mã GCN: N/A
+Số tờ: 52, Số thửa: 234, Mã GCN: N/A
+Số tờ: 62, Số thửa: 520, Mã GCN: N/A
+Số tờ: 63, Số thửa: 538, Mã GCN: N/A
+Số tờ: 52, Số thửa: 405, Mã GCN: N/A
+Số tờ: 55, Số thửa: 336, Mã GCN: N/A
+Số tờ: 51, Số thửa: 972, Mã GCN: N/A
+Số tờ: 51, Số thửa: 528, Mã GCN: N/A
+Số tờ: 52, Số thửa: 384, Mã GCN: N/A
+Số tờ: 51, Số thửa: 787, Mã GCN: N/A
+Số tờ: 62, Số thửa: 479, Mã GCN: N/A
+Số tờ: 71, Số thửa: 126, Mã GCN: N/A
+Số tờ: 66, Số thửa: 371, Mã GCN: N/A
+Số tờ: 66, Số thửa: 511, Mã GCN: N/A
+Số tờ: 66, Số thửa: 521, Mã GCN: N/A
+Số tờ: 63, Số thửa: 67, Mã GCN: N/A
+Số tờ: 75, Số thửa: 175, Mã GCN: N/A
+Số tờ: 48, Số thửa: 954, Mã GCN: N/A
+Số tờ: 48, Số thửa: 910, Mã GCN: N/A
+Số tờ: 65, Số thửa: 121, Mã GCN: N/A
+Số tờ: 65, Số thửa: 942, Mã GCN: N/A
+Số tờ: 62, Số thửa: 545, Mã GCN: N/A
+Số tờ: 52, Số thửa: 534, Mã GCN: N/A
+Số tờ: 62, Số thửa: 454, Mã GCN: N/A
+Số tờ: 47, Số thửa: 1085, Mã GCN: N/A
+Số tờ: 48, Số thửa: 771, Mã GCN: N/A
+Số tờ: 53, Số thửa: 87, Mã GCN: N/A
+Số tờ: 65, Số thửa: 459, Mã GCN: N/A
+Số tờ: 65, Số thửa: 551, Mã GCN: N/A
+Số tờ: 71, Số thửa: 155, Mã GCN: N/A
+Số tờ: 71, Số thửa: 236, Mã GCN: N/A
+Số tờ: 50, Số thửa: 95, Mã GCN: N/A
+Số tờ: 47, Số thửa: 686, Mã GCN: N/A
+Số tờ: 48, Số thửa: 424, Mã GCN: N/A
+Số tờ: 48, Số thửa: 133, Mã GCN: N/A
+Số tờ: 48, Số thửa: 103, Mã GCN: N/A
+Số tờ: 43, Số thửa: 326, Mã GCN: N/A
+Số tờ: 55, Số thửa: 489, Mã GCN: N/A
+Số tờ: 65, Số thửa: 144, Mã GCN: N/A
+Số tờ: 65, Số thửa: 364, Mã GCN: N/A
+Số tờ: 65, Số thửa: 399, Mã GCN: N/A
+Số tờ: 65, Số thửa: 565, Mã GCN: N/A
+Số tờ: 52, Số thửa: 895, Mã GCN: N/A
+Số tờ: 55, Số thửa: 218, Mã GCN: N/A
+Số tờ: 48, Số thửa: 263, Mã GCN: N/A
+Số tờ: 47, Số thửa: 452, Mã GCN: N/A
+Số tờ: 48, Số thửa: 139, Mã GCN: N/A
+Số tờ: 42, Số thửa: 58, Mã GCN: N/A
+Số tờ: 46, Số thửa: 1034, Mã GCN: N/A
+Số tờ: 46, Số thửa: 1059, Mã GCN: N/A
+Số tờ: 52, Số thửa: 596, Mã GCN: N/A
+Số tờ: 52, Số thửa: 606, Mã GCN: N/A
+Số tờ: 52, Số thửa: 636, Mã GCN: N/A
+Số tờ: 52, Số thửa: 641, Mã GCN: N/A
+Số tờ: 52, Số thửa: 661, Mã GCN: N/A
+Số tờ: 52, Số thửa: 676, Mã GCN: N/A
+Số tờ: 52, Số thửa: 711, Mã GCN: N/A
+Số tờ: 52, Số thửa: 722, Mã GCN: N/A
+Số tờ: 52, Số thửa: 789, Mã GCN: N/A
+Số tờ: 66, Số thửa: 431, Mã GCN: N/A
+Số tờ: 63, Số thửa: 85, Mã GCN: N/A
+Số tờ: 51, Số thửa: 822, Mã GCN: N/A
+Số tờ: 65, Số thửa: 709, Mã GCN: N/A
+Số tờ: 51, Số thửa: 195, Mã GCN: N/A
+Số tờ: 47, Số thửa: 591, Mã GCN: N/A
+Số tờ: 48, Số thửa: 1017, Mã GCN: N/A
+Số tờ: 48, Số thửa: 535, Mã GCN: N/A
+Số tờ: 47, Số thửa: 649, Mã GCN: N/A
+Số tờ: 48, Số thửa: 1086, Mã GCN: N/A
+Số tờ: 64, Số thửa: 557, Mã GCN: N/A
+Số tờ: 51, Số thửa: 793, Mã GCN: N/A
+Số tờ: 55, Số thửa: 128, Mã GCN: N/A
+Số tờ: 51, Số thửa: 1012, Mã GCN: N/A
+Số tờ: 50, Số thửa: 259, Mã GCN: N/A
+Số tờ: 51, Số thửa: 695, Mã GCN: N/A
+Số tờ: 65, Số thửa: 766, Mã GCN: N/A
+Số tờ: 65, Số thửa: 788, Mã GCN: N/A
+Số tờ: 66, Số thửa: 132, Mã GCN: N/A
+Số tờ: 52, Số thửa: 470, Mã GCN: N/A
+Số tờ: 44, Số thửa: 299, Mã GCN: N/A
+Số tờ: 43, Số thửa: 55, Mã GCN: N/A
+Số tờ: 49, Số thửa: 189, Mã GCN: N/A
+Số tờ: 48, Số thửa: 459, Mã GCN: N/A
+Số tờ: 51, Số thửa: 481, Mã GCN: N/A
+Số tờ: 50, Số thửa: 250, Mã GCN: N/A
+Số tờ: 73, Số thửa: 9, Mã GCN: N/A
+Số tờ: 71, Số thửa: 216, Mã GCN: N/A
+Số tờ: 71, Số thửa: 235, Mã GCN: N/A
+Số tờ: 51, Số thửa: 1000, Mã GCN: N/A
+Số tờ: 63, Số thửa: 313, Mã GCN: N/A
+Số tờ: 44, Số thửa: 103, Mã GCN: N/A
+Số tờ: 48, Số thửa: 960, Mã GCN: N/A
+Số tờ: 48, Số thửa: 754, Mã GCN: N/A
+Số tờ: 48, Số thửa: 877, Mã GCN: N/A
+Số tờ: 64, Số thửa: 126, Mã GCN: N/A
+Số tờ: 65, Số thửa: 421, Mã GCN: N/A
+Số tờ: 46, Số thửa: 891, Mã GCN: N/A
+Số tờ: 52, Số thửa: 124, Mã GCN: N/A
+Số tờ: 52, Số thửa: 96, Mã GCN: N/A
+Số tờ: 46, Số thửa: 737, Mã GCN: N/A
+Số tờ: 48, Số thửa: 944, Mã GCN: N/A
+Số tờ: 43, Số thửa: 109, Mã GCN: N/A
+Số tờ: 49, Số thửa: 502, Mã GCN: N/A
+Số tờ: 48, Số thửa: 903, Mã GCN: N/A
+Số tờ: 42, Số thửa: 230, Mã GCN: N/A
+Số tờ: 48, Số thửa: 994, Mã GCN: N/A
+Số tờ: 47, Số thửa: 1273, Mã GCN: N/A
+Số tờ: 47, Số thửa: 743, Mã GCN: N/A
+Số tờ: 47, Số thửa: 1209, Mã GCN: N/A
+Số tờ: 46, Số thửa: 787, Mã GCN: N/A
+Số tờ: 51, Số thửa: 590, Mã GCN: N/A
+Số tờ: 52, Số thửa: 662, Mã GCN: N/A
+Số tờ: 43, Số thửa: 396, Mã GCN: N/A
+Số tờ: 47, Số thửa: 661, Mã GCN: N/A
+Số tờ: 63, Số thửa: 591, Mã GCN: N/A
+Số tờ: 66, Số thửa: 239, Mã GCN: N/A
+Số tờ: 66, Số thửa: 345, Mã GCN: N/A
+Số tờ: 74, Số thửa: 176, Mã GCN: N/A
+Số tờ: 55, Số thửa: 866, Mã GCN: N/A
+Số tờ: 55, Số thửa: 882, Mã GCN: N/A
+Số tờ: 51, Số thửa: 1182, Mã GCN: N/A
+Số tờ: 46, Số thửa: 57, Mã GCN: G 712081
+Số tờ: 2, Số thửa: 259, Mã GCN: N/A
+Số tờ: 7, Số thửa: 586, Mã GCN: AA 02152313
+Số tờ: 18, Số thửa: 1284, Mã GCN: N/A
+Số tờ: 17, Số thửa: 131, Mã GCN: N/A
+Số tờ: 17, Số thửa: 206, Mã GCN: N/A
+Số tờ: 17, Số thửa: 98, Mã GCN: N/A
+Số tờ: 17, Số thửa: 126, Mã GCN: N/A
+Số tờ: 619801, Số thửa: 11, Mã GCN: BR 800685
+Số tờ: 619800, Số thửa: 20014, Mã GCN: BR 800463
+Số tờ: 619802, Số thửa: 85000505, Mã GCN: CB 676437
+Số tờ: 235, Số thửa: 1500001, Mã GCN: AB 123292
+Số tờ: 619800, Số thửa: 600131652, Mã GCN: N/A
+Số tờ: 259, Số thửa: 548, Mã GCN: N/A
+Số tờ: 259, Số thửa: 595, Mã GCN: N/A
+Số tờ: 619803, Số thửa: 62000403, Mã GCN: N/A
+Số tờ: 236, Số thửa: 107, Mã GCN: AA 00049658
+Số tờ: 236, Số thửa: 182, Mã GCN: CX 782162
+Số tờ: 257, Số thửa: 825, Mã GCN: AA 00755905
+Số tờ: 257, Số thửa: 826, Mã GCN: AA 00755906
+Số tờ: 258, Số thửa: 601, Mã GCN: AA 00755908
+Số tờ: 210, Số thửa: 291, Mã GCN: N/A
+Số tờ: 235, Số thửa: 2830000, Mã GCN: N/A
+Số tờ: 619802, Số thửa: 113000407, Mã GCN: N/A
+Số tờ: 619802, Số thửa: 352, Mã GCN: N/A
+Số tờ: 256, Số thửa: 2000000, Mã GCN: G 101558
+Số tờ: 256, Số thửa: 107, Mã GCN: G 101558
+Số tờ: 256, Số thửa: 109, Mã GCN: G 101558
+Số tờ: 256, Số thửa: 142, Mã GCN: G 101558
+Số tờ: 254, Số thửa: 93, Mã GCN: G 101558
+Số tờ: 254, Số thửa: 343, Mã GCN: DO 317683
+Số tờ: 190, Số thửa: 227, Mã GCN: BX 340787
+Số tờ: 235, Số thửa: 268, Mã GCN: DI 414107
+Số tờ: 259, Số thửa: 503, Mã GCN: N/A
+Số tờ: 61001, Số thửa: 70, Mã GCN: T 232335
+Số tờ: 213, Số thửa: 192, Mã GCN: DI 414706
+Số tờ: 234, Số thửa: 131, Mã GCN: W 786184
+Số tờ: 234, Số thửa: 131, Mã GCN: W 786184
+Số tờ: 235, Số thửa: 163, Mã GCN: Đ 298632
+Số tờ: 235, Số thửa: 268, Mã GCN: DI 414107
+Số tờ: 235, Số thửa: 163, Mã GCN: Đ 298632
+Số tờ: 213, Số thửa: 192, Mã GCN: DI 414706
+Số tờ: 258, Số thửa: 570, Mã GCN: DI 414672
+Số tờ: 234, Số thửa: 681, Mã GCN: DL 202466
+Số tờ: 234, Số thửa: 734, Mã GCN: AD 192946
+Số tờ: 619800, Số thửa: 354, Mã GCN: DL 202195
+Số tờ: 190, Số thửa: 337, Mã GCN: N/A
+Số tờ: 256, Số thửa: 291, Mã GCN: CU 311066
+Số tờ: 61981213, Số thửa: 8, Mã GCN: BS 973881
+Số tờ: 194, Số thửa: 890000, Mã GCN: DL 202954
+Số tờ: 194, Số thửa: 900000, Mã GCN: DL 202954
+Số tờ: 194, Số thửa: 910000, Mã GCN: DL 202954
+Số tờ: 236, Số thửa: 360, Mã GCN: DL 233199
+Số tờ: 257, Số thửa: 779, Mã GCN: DL 233243
+Số tờ: 236, Số thửa: 360, Mã GCN: DL 233199
+Số tờ: 236, Số thửa: 360, Mã GCN: DL 233199
+Số tờ: 235, Số thửa: 330, Mã GCN: N/A
+Số tờ: 235, Số thửa: 331, Mã GCN: DQ 311278
+Số tờ: 257, Số thửa: 819, Mã GCN: AA 02201924
+Số tờ: 212, Số thửa: 20, Mã GCN: G 742195
+Số tờ: 258, Số thửa: 12, Mã GCN: G 101453
+Số tờ: 232, Số thửa: 274, Mã GCN: DL 233249
+Số tờ: 80001000, Số thửa: 46, Mã GCN: N/A
+Số tờ: 235, Số thửa: 40, Mã GCN: G 101806
+Số tờ: 31, Số thửa: 153, Mã GCN: DL 233267
+Số tờ: 5, Số thửa: 80000, Mã GCN: N/A
+Số tờ: 54, Số thửa: 331, Mã GCN: N/A
+Số tờ: 29, Số thửa: 458, Mã GCN: N/A
+Số tờ: 50, Số thửa: 176, Mã GCN: N/A
+Số tờ: 50, Số thửa: 176, Mã GCN: N/A
+Số tờ: 38, Số thửa: 361, Mã GCN: N/A
+Số tờ: 46, Số thửa: 45, Mã GCN: N/A
+Số tờ: 50, Số thửa: 171, Mã GCN: N/A
+Số tờ: 31, Số thửa: 148, Mã GCN: N/A
+Số tờ: 54, Số thửa: 219, Mã GCN: N/A
+Số tờ: 35, Số thửa: 29, Mã GCN: N/A
+Số tờ: 46, Số thửa: 283, Mã GCN: N/A
+Số tờ: 46, Số thửa: 283, Mã GCN: N/A
+Số tờ: 55, Số thửa: 289, Mã GCN: DI 414236
+Số tờ: 4, Số thửa: 15, Mã GCN: N/A
+Số tờ: 46, Số thửa: 309, Mã GCN: N/A
+Số tờ: 27, Số thửa: 36, Mã GCN: N/A
+Số tờ: 32, Số thửa: 43, Mã GCN: N/A
+Số tờ: 45, Số thửa: 75, Mã GCN: N/A
+Số tờ: 46, Số thửa: 305, Mã GCN: N/A
+Số tờ: 38, Số thửa: 264, Mã GCN: N/A
+Số tờ: 38, Số thửa: 264, Mã GCN: N/A
+Số tờ: 38, Số thửa: 205, Mã GCN: N/A
+Số tờ: 55, Số thửa: 299, Mã GCN: N/A
+Số tờ: 39, Số thửa: 82, Mã GCN: DD 965659
+Số tờ: 53, Số thửa: 147, Mã GCN: DO 317675
+Số tờ: 16, Số thửa: 224, Mã GCN: N/A
+Số tờ: 30, Số thửa: 12, Mã GCN: N/A
+Số tờ: 61001, Số thửa: 109, Mã GCN: BE 694729
+Số tờ: 233, Số thửa: 352, Mã GCN: DD 965211
+Số tờ: 148, Số thửa: 350, Mã GCN: BĐ 604935
+Số tờ: 148, Số thửa: 351, Mã GCN: BĐ 604934
+Số tờ: 235, Số thửa: 287, Mã GCN: AA 00755586
+Số tờ: 148, Số thửa: 364, Mã GCN: BĐ 604936
+Số tờ: 30, Số thửa: 183, Mã GCN: DQ 311363
+Số tờ: 24, Số thửa: 96, Mã GCN: DI 414063
+Số tờ: 190, Số thửa: 226, Mã GCN: BX 340786
+Số tờ: 33, Số thửa: 17, Mã GCN: N/A
+Số tờ: 33, Số thửa: 17, Mã GCN: N/A
+Số tờ: 50, Số thửa: 104, Mã GCN: AG 698504
+Số tờ: 50, Số thửa: 104, Mã GCN: AG 698504
+Số tờ: 61, Số thửa: 27, Mã GCN: DL 202708
+Số tờ: 257, Số thửa: 109, Mã GCN: AD 088182
+Số tờ: 257, Số thửa: 81, Mã GCN: G 101639
+Số tờ: 165, Số thửa: 13, Mã GCN: BX 340788
+Số tờ: 161, Số thửa: 13, Mã GCN: N/A
+Số tờ: 234, Số thửa: 65, Mã GCN: T 094538
+Số tờ: 236, Số thửa: 301, Mã GCN: N/A
+Số tờ: 235, Số thửa: 271, Mã GCN: DI 414136
+Số tờ: 256, Số thửa: 201, Mã GCN: G 101218
+Số tờ: 234, Số thửa: 380, Mã GCN: BK 137600
+Số tờ: 234, Số thửa: 380, Mã GCN: BK 137600
+Số tờ: 190, Số thửa: 386, Mã GCN: N/A
+Số tờ: 237, Số thửa: 75, Mã GCN: G 101915
+Số tờ: 236, Số thửa: 289, Mã GCN: N/A
+Số tờ: 234, Số thửa: 681, Mã GCN: DL 202466
+Số tờ: 232, Số thửa: 9, Mã GCN: G 101697
+Số tờ: 211, Số thửa: 148, Mã GCN: AD 088443
+Số tờ: 258, Số thửa: 384, Mã GCN: CN 863537
+Số tờ: 235, Số thửa: 163, Mã GCN: Đ 298632
+Số tờ: 46, Số thửa: 300, Mã GCN: AA 00056745
+Số tờ: 258, Số thửa: 87, Mã GCN: AD 088073
+Số tờ: 235, Số thửa: 143, Mã GCN: BA 352058
+Số tờ: 237, Số thửa: 14, Mã GCN: DO 317225
+Số tờ: 258, Số thửa: 5, Mã GCN: G 101453
+Số tờ: 51, Số thửa: 149, Mã GCN: N/A
+Số tờ: 22, Số thửa: 277, Mã GCN: N/A
+Số tờ: 51, Số thửa: 150, Mã GCN: N/A
+Số tờ: 258, Số thửa: 386, Mã GCN: DQ 311295
+Số tờ: 258, Số thửa: 89, Mã GCN: W 860882
+Số tờ: 54, Số thửa: 308, Mã GCN: CX 782721
+Số tờ: 22, Số thửa: 215, Mã GCN: DL 202060
+Số tờ: 143, Số thửa: 166, Mã GCN: AA 01810784
+Số tờ: 21, Số thửa: 16, Mã GCN: S 448982
+Số tờ: 33, Số thửa: 17, Mã GCN: N/A
+Số tờ: 29, Số thửa: 50, Mã GCN: N/A
+Số tờ: 54, Số thửa: 333, Mã GCN: N/A
+Số tờ: 30, Số thửa: 5, Mã GCN: N/A
+Số tờ: 51, Số thửa: 72, Mã GCN: N/A
+Số tờ: 9, Số thửa: 12669, Mã GCN: CI 076649
+Số tờ: 142, Số thửa: 572, Mã GCN: AA 02375303
