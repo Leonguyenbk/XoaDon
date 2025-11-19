@@ -1137,3 +1137,8 @@ Số tờ: 110, Số thửa: 473, Mã GCN: N/A
 Số tờ: 110, Số thửa: 427, Mã GCN: N/A
 Số tờ: 97, Số thửa: 88, Mã GCN: N/A
 Số tờ: 96, Số thửa: 1007, Mã GCN: N/A
+Số tờ: 94, Số thửa: 145, Mã GCN: N/A
+Số tờ: 93, Số thửa: 725, Mã GCN: N/A
+Số tờ: 103, Số thửa: 17, Mã GCN: N/A
+Số tờ: 90, Số thửa: 2, Mã GCN: AA 02230948
+Số tờ: 104, Số thửa: 135, Mã GCN: G 126758

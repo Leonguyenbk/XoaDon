@@ -885,48 +885,49 @@ def perform_bo_don(driver, wait, logger: UILogger, reason="", so_to=None, so_thu
             print(f"⚠️ Lỗi khi ghi file txt: {e}")
     
     try:
+        # --- Click nút "Bỏ đơn" ---
         btn_bo_don = wait.until(EC.element_to_be_clickable((By.ID, "btnBoDonDangKy")))
+        driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn_bo_don)
         btn_bo_don.click()
+        print("👉 Đã nhấn nút Bỏ đơn")
 
-        # 1. Chờ popup xác nhận xuất hiện
-        wait.until(
-            EC.visibility_of_element_located((
-                By.CSS_SELECTOR,
-                "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open"
-            ))
-        )
-        print("👉 Popup xác nhận 'Bỏ đơn' đã xuất hiện")
+        # --- Xử lý popup xác nhận ---
+        try:
+            # Chờ popup và nút "Đồng ý" (màu cam) xuất hiện và có thể click
+            dongy_selector = "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open .jconfirm-buttons button.btn.btn-orange"
+            dongy_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, dongy_selector)))
+            
+            print("👉 Popup xác nhận 'Bỏ đơn' đã hiện, nhấn ĐỒNG Ý")
 
-        # 2. Chờ đúng nút cam (btn btn-orange) xuất hiện và có thể click
-        btn_orange = wait.until(
-            EC.element_to_be_clickable((
-                By.CSS_SELECTOR,
-                "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open .jconfirm-buttons button.btn.btn-orange"
-            ))
-        )
-        print("👉 Nút cam 'Đồng ý' đã sẵn sàng")
+            # Sử dụng JS click để tăng độ ổn định
+            driver.execute_script("arguments[0].click();", dongy_btn)
 
-        # 3. Nhấn nút cam
-        btn_orange.click()
-        print("👉 Đã nhấn nút cam 'Đồng ý'")
+        except (TimeoutException, ElementNotInteractableException) as e:
+            print(f"❌ Không thấy hoặc không click được nút ĐỒNG Ý khi Bỏ đơn: {e}")
+            logger.log("❌ Không thấy popup xác nhận khi Bỏ đơn, thử nhấn ENTER.")
+            # Thử nhấn phím ENTER như một phương án cuối
+            try:
+                driver.switch_to.active_element.send_keys(Keys.ENTER)
+                print("⌨️ Đã thử nhấn ENTER để xác nhận 'Bỏ đơn'.")
+            except Exception as enter_e:
+                print(f" Lỗi khi thử nhấn ENTER: {enter_e}")
+                logger.log(f"❌ Lỗi khi Bỏ đơn (không click được Đồng ý và không nhấn ENTER được): {enter_e}")
+                return True # Trả về True để vòng lặp chính biết cần mở lại modal
 
-        # 4. Chờ popup đóng hoàn toàn
-        wait.until(
-            EC.invisibility_of_element_located((
-                By.CSS_SELECTOR,
-                "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open"
-            ))
-        )
-        print("✅ Popup 'Bỏ đơn' đã đóng")
-
-        WebDriverWait(driver, 15).until(lambda d: all_jconfirm_closed(d))
-        print("✅ Tất cả popup đã đóng – Bỏ đơn thành công!")
+        # --- Chờ xử lý và popup đóng ---
+        wait_query_xoadon(driver, timeout=60)
+        wait_all_jconfirm_closed(driver, timeout=15)
+        
         logger.log("✅ Thao tác 'Bỏ đơn' hoàn tất.")
         return True
 
+    except NoSuchWindowException:
+        error_message = "Lỗi: Cửa sổ trình duyệt đã bị đóng đột ngột khi thực hiện 'Bỏ đơn'."
+        logger.log(f"❌ {error_message}")
+        return True # Coi như đã xử lý để không làm crash vòng lặp
     except Exception as e:
         logger.log(f"❌ Lỗi trong quá trình 'Bỏ đơn': {e}")
-        print(f"❌ Lỗi trong quá trình 'Bỏ đơn': {e}")
+        print(f"❌ Lỗi trong quá trình 'Bỏ đơn': {traceback.format_exc()}")
         # vẫn trả về True để vòng lặp chính biết cần mở lại modal
         return True
 
