@@ -1,4 +1,4 @@
-import time, traceback, threading, sys, json, re, zipfile
+import time, traceback, threading, sys, json, re, os
 from venv import logger
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -93,7 +93,6 @@ def find_tt_dangky_anchor(tree_el):
             return els[0]
     raise NoSuchElementException("Không tìm thấy anchor 'Thông tin đăng ký' trong jsTree.")
 
-
 def wait_page_idle(driver, wait, extra_ms=300):
     wait.until(lambda x: x.execute_script("return document.readyState") == "complete")
     time.sleep(extra_ms/1000.0)
@@ -124,7 +123,6 @@ def switch_to_iframe_containing_table(driver, table_id="tblTTThuaDat", timeout=1
             continue
     driver.switch_to.default_content()
     return False
-
 
 def wait_for_table_loaded(driver, table_id="tblTTThuaDat", timeout=15):
     try:
@@ -424,7 +422,7 @@ def wait_processing_quick(driver, table_id="tblTTThuaDat", max_wait=6):
         return True
     except Exception:
         return False
-    
+
 def hard_jump_pagination(driver, page_number, table_id="tblTTThuaDat", timeout=10):
     wait = WebDriverWait(driver, timeout)
     # xác định trang hiện tại
@@ -483,6 +481,17 @@ def all_jconfirm_closed(driver):
         except Exception:
             continue
     return True
+
+def wait_all_jconfirm_closed(driver, timeout=15):
+    """
+    Chờ cho đến khi KHÔNG còn popup jConfirm nào hiển thị.
+    Dùng wrapper cho all_jconfirm_closed để đảm bảo không còn overlay che click.
+    """
+    try:
+        WebDriverWait(driver, timeout).until(lambda d: all_jconfirm_closed(d))
+    except TimeoutException:
+        # Hết thời gian vẫn còn popup thì thôi, không raise để khỏi vỡ flow
+        pass
 
 def switch_to_frame_having(driver, by, value, timeout=8):
     driver.switch_to.default_content()
@@ -682,6 +691,79 @@ def wait_query_done(driver, timeout=30, ajax_wait=5):
             return
         time.sleep(0.1)
 
+def wait_query_xoadon(driver, timeout=30, ajax_wait=5, max_after_first_ajax=10):
+    """
+    Chờ các request AJAX (jQuery) phục vụ việc tra cứu đơn hoàn tất.
+
+    - Gọi NGAY SAU khi click nút Tra cứu.
+    - Pha 1: đợi phát hiện ÍT NHẤT 1 request AJAX bắt đầu (jQuery.active > 0)
+             trong tối đa ajax_wait giây.
+    - Pha 2: sau khi thấy AJAX bắt đầu, đợi tối đa max_after_first_ajax giây
+             để jQuery.active giảm xuống (0 hoặc gần 0) rồi thoát.
+    - Tổng thời gian sẽ bị khống chế bởi (ajax_wait + max_after_first_ajax),
+      KHÔNG bao giờ kéo dài hết timeout như trước.
+    """
+
+    # 1. Đợi jQuery có trên trang
+    try:
+        WebDriverWait(driver, 3).until(
+            lambda d: d.execute_script("return window.jQuery !== undefined;")
+        )
+    except Exception:
+        # Không có jQuery thì coi như không chờ được AJAX
+        return
+
+    # 2. Pha 1: cố gắng đợi có ÍT NHẤT 1 request AJAX bắt đầu
+    phase1_end = time.time() + ajax_wait
+    saw_ajax = False
+
+    while time.time() < phase1_end:
+        try:
+            active = driver.execute_script("return jQuery.active;")
+            if active > 0:
+                saw_ajax = True
+                break
+        except Exception:
+            # jQuery biến mất -> thôi, không chờ nữa
+            return
+        time.sleep(0.1)
+
+    if not saw_ajax:
+        # Không thấy request nào bắt đầu trong ajax_wait giây
+        # -> Có thể trang xử lý đồng bộ hoặc cache -> không chờ nữa
+        return
+
+    # 3. Pha 2: Đã thấy AJAX bắt đầu -> chờ đến khi nó "lặng" bớt
+    #    nhưng TỐI ĐA max_after_first_ajax giây, không đợi hết 30s
+    phase2_end = time.time() + max_after_first_ajax
+
+    # Có thể cho phép 1–2 request nền vẫn chạy, nên dùng ngưỡng <= 1
+    THRESH = 1
+    stable_required = 5   # cần liên tiếp 5 lần (0.1s * 5 = 0.5s) dưới ngưỡng
+    stable_count = 0
+
+    while time.time() < phase2_end:
+        try:
+            active = driver.execute_script("return jQuery.active;")
+        except Exception:
+            # jQuery không còn -> nhiều khả năng trang xong/chuyển
+            return
+
+        if active <= THRESH:
+            stable_count += 1
+            if stable_count >= stable_required:
+                # Đã yên ổn một lúc -> coi như xong
+                return
+        else:
+            # Lại có request mới -> reset bộ đếm
+            stable_count = 0
+
+        time.sleep(0.1)
+
+    # Hết max_after_first_ajax giây mà vẫn chưa "yên" hẳn -> kệ, thoát.
+    return
+
+
 def chon_ban_ghi_dau_tien(driver, timeout=30):
     wait = WebDriverWait(driver, timeout)
 
@@ -750,15 +832,27 @@ def click_step_GiayChungNhan(driver, timeout=30):
     return True
 
 def kiem_tra_tree_gcn(driver):
-    # Lấy tất cả anchor trong cây GCN
+    """
+    Kiểm tra cây #treeGiayChungNhan.
+
+    Trả về (status, gcn_code, raw_text):
+      - status = "no_data"    : text chứa "Không có dữ liệu"/"Không có giữ liệu" => XÓA ĐƠN
+      - status = "has_gcn"    : Có chuỗi 'Số phát hành: ...' => BỎ ĐƠN do có mã GCN
+      - status = "has_data"   : Có dữ liệu khác (không chứa 'Không có dữ liệu' và không match regex) => BỎ ĐƠN do có dữ liệu
+    """
     anchors = driver.find_elements(By.CSS_SELECTOR, "#treeGiayChungNhan a.jstree-anchor")
 
-    # Nếu KHÔNG có anchor nào => không có dữ liệu
     if not anchors:
         print("❌ Không có dữ liệu trong #treeGiayChungNhan")
+        return ("no_data", None, "")
 
-    # Lấy text của anchor đầu tiên
     text = anchors[0].text.strip()
+    text_lower = text.lower()
+
+    # Trường hợp UI ghi 'Không có dữ liệu' (hoặc gõ nhầm 'giữ liệu')
+    if "không có dữ liệu" in text_lower or "không có giữ liệu" in text_lower:
+        print("ℹ️ Cây GCN hiển thị 'Không có dữ liệu'")
+        return ("no_data", None, text)
 
     # Regex tìm số phát hành
     pattern = r"Số phát hành:\s*((?:[A-Za-zĐđ]{1,2}\s?\d{5,8})|(?:\d{5,8}))"
@@ -766,12 +860,12 @@ def kiem_tra_tree_gcn(driver):
 
     if match:
         gcn_code = match.group(1).strip()
-        print(f"✅ Có dữ liệu GCN: {gcn_code}")
-        return True, gcn_code
+        print(f"✅ Có dữ liệu GCN, Số phát hành: {gcn_code}")
+        return ("has_gcn", gcn_code, text)
     else:
-        print("❌ Không tìm thấy 'Số phát hành' trong dữ liệu")
-        return False, None
-    
+        print("✅ Có dữ liệu trong cây GCN nhưng không tìm thấy 'Số phát hành'")
+        return ("has_data", None, text)
+
 def perform_bo_don(driver, wait, logger: UILogger, reason="", so_to=None, so_thua=None, gcn_code=None):
     """
     Hàm riêng để thực hiện thao tác "Bỏ đơn".
@@ -832,13 +926,21 @@ def perform_bo_don(driver, wait, logger: UILogger, reason="", so_to=None, so_thu
     except Exception as e:
         logger.log(f"❌ Lỗi trong quá trình 'Bỏ đơn': {e}")
         print(f"❌ Lỗi trong quá trình 'Bỏ đơn': {e}")
-        return True # Vẫn trả về True để vòng lặp chính biết cần mở lại modal
+        # vẫn trả về True để vòng lặp chính biết cần mở lại modal
+        return True
 
 def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
     """
     Thực hiện tìm kiếm và xử lý một thửa đất trong modal tra cứu đã mở.
-    Trả về True nếu tìm thấy và xử lý (modal sẽ đóng).
-    Trả về False nếu không tìm thấy (modal vẫn mở).
+
+    Trả về:
+        processed (bool): True nếu đã có hành động (xóa/bỏ) làm đóng modal.
+        note (str): ghi chú để ghi ra file Excel kết quả, gồm:
+            - "Không tìm thấy bản ghi"
+            - "Bỏ đơn do có dữ liệu"
+            - "bỏ đơn do có mã GCN {mã gcn}"
+            - "Đã xóa đơn"
+            - hoặc "Lỗi khi xử lý thửa ..." (trường hợp ngoại lệ)
     """
     try:
         # --- Nhập liệu và tìm kiếm ---
@@ -858,25 +960,33 @@ def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
 
         wait_tracuu_section_ready(driver, timeout=60)
         WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.ID, "tblTraCuuTinhHinhDangKy_info")))
+            EC.presence_of_element_located((By.ID, "tblTraCuuTinhHinhDangKy_info"))
+        )
         wait_query_done(driver, timeout=60)
         so_ban_ghi = wait_and_count_tblTraCuu(driver)
         logger.log(f"✅ Đã nhập Số tờ: {so_to}, Số thửa: {so_thua}. Số bản ghi tìm được: {so_ban_ghi}.")
 
         if so_ban_ghi == 0:
             logger.log("❌ Không tìm thấy bản ghi nào. Tìm thửa tiếp theo...")
-            return False
+            return False, "Không tìm thấy bản ghi"
 
         # --- Tìm thấy, xử lý ---
         chon_ban_ghi_dau_tien(driver, timeout=30)
         wait_query_done(driver, timeout=60)
         click_step_GiayChungNhan(driver, timeout=30)
-        wait_query_done(driver, timeout=60)
-        match, gcn_code = kiem_tra_tree_gcn(driver)
-        print("Kết quả kiểm tra GCN:", match)
-        logger.log(f"👉 Kết quả kiểm tra GCN: {'Có dữ liệu - ' + (gcn_code or '') if match else 'Không có dữ liệu'}.")
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.ID, "treeGiayChungNhan"))
+        )
+        status, gcn_code, raw_text = kiem_tra_tree_gcn(driver)
+        if status == "no_data":
+            logger.log("👉 Kết quả kiểm tra GCN: Không có dữ liệu (sẽ XÓA ĐƠN).")
+        elif status == "has_gcn":
+            logger.log(f"👉 Kết quả kiểm tra GCN: Có mã GCN {gcn_code} (sẽ BỎ ĐƠN).")
+        else:
+            logger.log("👉 Kết quả kiểm tra GCN: Có dữ liệu nhưng không có 'Số phát hành' (sẽ BỎ ĐƠN).")
 
-        if not match:
+        # ================== TRƯỜNG HỢP KHÔNG CÓ DỮ LIỆU -> XÓA ĐƠN ==================
+        if status == "no_data":
             # ===== XÓA ĐƠN ĐĂNG KÝ =====
             try:
                 btn_xoa = wait.until(EC.element_to_be_clickable((By.ID, "btnXoaDonDangKy")))
@@ -886,11 +996,13 @@ def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
             except Exception as e:
                 print(f"❌ Không tìm thấy hoặc không click được nút Xóa đơn đăng ký: {e}")
                 logger.log("❌ Không tìm thấy nút Xóa đơn đăng ký.")
-                return True  # cho vòng ngoài chạy tiếp
-            
+                # coi như có xử lý nhưng thất bại
+                return True, "Lỗi khi xử lý thửa (không click được nút Xóa đơn đăng ký)"
+            WebDriverWait(driver, 15).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR,
+                    "div.jconfirm.jconfirm-open .jconfirm-scrollpane")))           
             # ---- POPUP 1: ĐỒNG Ý / KHÔNG ----
             try:
-
                 # chờ popup hiện
                 wait.until(EC.visibility_of_element_located((
                     By.CSS_SELECTOR, "div.jconfirm.jconfirm-open .jconfirm-scrollpane"
@@ -905,41 +1017,22 @@ def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
                 try:
                     dongy_btn.click()
                 except ElementClickInterceptedException:
-                    driver.execute_script("arguments[0].click();", dongy_btn)
-                
-                wait_query_done(driver, timeout=60)
-                # ---- KIỂM TRA POPUP THẾ CHẤP ----
-                is_mortgaged = False
-                try: # Thử kiểm tra xem có popup báo thế chấp không
-                    jconfirm_message = driver.find_element(By.CSS_SELECTOR, ".jconfirm-box .jconfirm-message")
-                    print(jconfirm_message.text)
-                    if "đang thế chấp" in jconfirm_message.text:
-                        is_mortgaged = True
-                        print("⚠️ Phát hiện popup GCN đang thế chấp. Sẽ tiến hành bỏ đơn.")
-                        
-                        # Đóng popup thông báo thế chấp
-                        close_btn = jconfirm_message.find_element(By.XPATH, ".//ancestor::div[contains(@class, 'jconfirm-box')]//button[normalize-space()='Đồng ý']")
-                        close_btn.click()
-                        WebDriverWait(driver, 10).until(lambda d: all_jconfirm_closed(d))                        
-                        # Gọi hàm thực hiện "Bỏ đơn" và thoát
-                        return perform_bo_don(driver, wait, logger, reason="GCN đang thế chấp.", so_to=so_to, so_thua=so_thua, gcn_code="Không xác định (báo lỗi)")
-                except Exception as check_err:
-                    print(f"Không kiểm tra được popup thế chấp, bỏ qua: {check_err}")
+                    driver.execute_script("arguments[0].click();", dongy_btn)                
+              
             except Exception as e:
                 print(f"❌ Không thấy hoặc không click được nút ĐỒNG Ý: {e}")
                 logger.log("❌ Không thấy popup xác nhận khi xóa.")
-                return True
-
-            # Nếu không phải trường hợp thế chấp, thì đây là luồng xóa thành công
-            if not is_mortgaged:
-                logger.log("❌ Không có dữ liệu GCN. Đơn đăng ký đã bị xóa.")
+                return True, "Lỗi khi xử lý thửa (không click được Đồng ý khi xóa)"
+            
+            wait_query_xoadon(driver, timeout=60)           
+            wait_all_jconfirm_closed(driver, timeout=15)
 
             # ---- POPUP 2: OK ----
             try:
                 selector = (
-                "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open "
-                "div.jconfirm-buttons > button"
-            )
+                    "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open "
+                    "div.jconfirm-buttons > button"
+                )
                 wait = WebDriverWait(driver, 60)
                 # Chờ element xuất hiện trong DOM
                 btn = wait.until(EC.presence_of_element_located(
@@ -957,25 +1050,47 @@ def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
             except Exception as e:
                 print(f"❌ Không tìm thấy / không click được nút OK: {e}")
                 # vẫn tiếp tục chờ đóng popup phía dưới
+            
+            wait_all_jconfirm_closed(driver, timeout=15)
 
             try:
                 WebDriverWait(driver, 15).until(lambda d: all_jconfirm_closed(d))
-                if not is_mortgaged:
-                    print("✅ Tất cả popup đã đóng – Xóa đơn thành công!")
             except Exception:
                 print("⚠ Popup không biến mất đúng hạn, nhưng có thể đã xử lý xong")
                 logger.log("⚠ Thao tác xóa hoàn tất nhưng popup không tự đóng.")
 
+            # nối theo yêu cầu: text cây GCN 'Không có dữ liệu' => ĐÃ XÓA ĐƠN
+            return True, "Đã xóa đơn"
+
+        # ================== TRƯỜNG HỢP CÓ DỮ LIỆU -> BỎ ĐƠN ==================
         else:
-            # Thửa đất có GCN, gọi hàm thực hiện "Bỏ đơn"
-            return perform_bo_don(driver, wait, logger, reason="Thửa đất đã có GCN.", so_to=so_to, so_thua=so_thua, gcn_code=gcn_code)
-        
-        return True
+            if status == "has_gcn":
+                # Thửa đất có GCN cụ thể
+                success = perform_bo_don(
+                    driver, wait, logger,
+                    reason="Thửa đất đã có GCN.",
+                    so_to=so_to, so_thua=so_thua,
+                    gcn_code=gcn_code
+                )
+                note = f"bỏ đơn do có mã GCN {gcn_code}"
+            else:
+                # Có dữ liệu nhưng không có số phát hành
+                success = perform_bo_don(
+                    driver, wait, logger,
+                    reason="Thửa đất có dữ liệu GCN (không có số phát hành).",
+                    so_to=so_to, so_thua=so_thua,
+                    gcn_code=None
+                )
+                note = "Bỏ đơn do có dữ liệu"
+
+            return success, note
 
     except Exception as ex:
         logger.log(f"❌ Có lỗi xảy ra khi xử lý thửa {so_thua}, tờ {so_to}: {ex}")
         logger.log(traceback.format_exc())
-        return True # Coi như đã xử lý để refresh lại trang
+        # Coi như đã xử lý (modal có thể đóng), và ghi chú lỗi
+        return True, f"Lỗi khi xử lý thửa tờ {so_to}, thửa {so_thua}"
+
 # ============== TKINTER UI ==============
 def main():
     root = tk.Tk()
@@ -1033,7 +1148,6 @@ def main():
     ent_col_so_thua.grid(row=1, column=3, sticky="w", padx=4, pady=4)
     ent_col_so_thua.insert(0, "sothua")
 
-
     # --- Nút chạy ---
     btn_run = ttk.Button(main_frm, text="Chạy tự động")
     btn_run.grid(row=5, column=1, sticky="w", padx=4, pady=8)
@@ -1078,7 +1192,6 @@ def main():
         file_path = excel_file_path.get()
         col_so_to_orig = ent_col_so_to.get().strip()
         col_so_thua_orig = ent_col_so_thua.get().strip()
-
 
         # Kiểm tra thông tin
         if not all([username, password, province, ma_xa]):
@@ -1132,6 +1245,22 @@ def main():
                     btn_run.config(state="normal")
                     return
 
+                # --- Chuẩn bị workbook KẾT QUẢ ---
+                result_wb = openpyxl.Workbook()
+                result_ws = result_wb.active
+                result_ws.title = "Ket_qua"
+                result_ws.append(["STT", "Dòng Excel", "Số tờ", "Số thửa", "Ghi chú"])
+
+                # Tạo tên file dạng <ma_xa>_<ten_file_goc>.xlsx          
+                file_name_only = os.path.basename(file_path)             # ví dụ: danhsach.xlsx
+                file_root, file_ext = os.path.splitext(file_name_only)
+                
+                result_path = os.path.join(
+                    os.path.dirname(file_path),
+                    f"{ma_xa}_{file_root}.xlsx"                          # ví dụ: 260314_danhsach.xlsx
+                )
+                logger.log(f"📄 File kết quả sẽ lưu tại: {result_path}")   # ("danhsach", ".xlsx")
+
                 # --- Khởi tạo trình duyệt và đăng nhập ---
                 logger.log("🚀 Khởi động Chrome…")
                 options = Options()
@@ -1160,52 +1289,67 @@ def main():
                 # --- Mở modal tra cứu MỘT LẦN ---
                 logger.log("🔎 Mở cửa sổ tra cứu…")
                 tra_cuu_button = wait.until(EC.element_to_be_clickable((By.ID, "btnChonDonDangKy")))
-                tra_cuu_button.click()
+                try:
+                    tra_cuu_button.click()
+                except ElementClickInterceptedException:
+                    logger.log("⚠️ Click bị chặn, thử lại bằng JavaScript...")
+                    driver.execute_script("arguments[0].click();", tra_cuu_button)
                 wait_tracuu_module_ready(driver, timeout=60)
-
 
                 # --- Lặp qua từng thửa đất ---
                 yellow_fill = PatternFill(start_color="FFFFFF00", end_color="FFFFFF00", fill_type="solid")
                 for i, (row_num, so_to, so_thua) in enumerate(plots_to_process):
                     logger.log(f"--- Xử lý thửa {i+1}/{len(plots_to_process)}: Tờ {so_to}, Thửa {so_thua} (Dòng {row_num}) ---")
 
-                    # Biến 'match' được trả về từ hàm search_and_process_plot
-                    # sẽ được dùng để quyết định có cần mở lại modal hay không.
-                    # Tuy nhiên, logic mới xử lý thế chấp sẽ phức tạp hơn.
-                    # Ta sẽ gọi hàm và để nó tự xử lý.
-                    # Nếu nó trả về True, nghĩa là một hành động (xóa/bỏ) đã diễn ra
-                    # và modal đã bị đóng.
-                    processed = search_and_process_plot(driver, wait, logger, so_to, so_thua)
+                    processed, note = search_and_process_plot(driver, wait, logger, so_to, so_thua)
+                    logger.log(f"📌 Ghi chú kết quả: {note}")
 
-                    # Nếu thửa đất không tìm thấy (processed=False), modal vẫn mở, không cần làm gì.
-                    # Nếu đã xử lý (processed=True), modal đã đóng, cần mở lại ở dưới.
+                    # Ghi vào file Excel KẾT QUẢ
+                    result_ws.append([i+1, row_num, so_to, so_thua, note])
 
-                    # Tô màu dòng sau khi xử lý
+                    # Tô màu dòng sau khi xử lý trong file gốc
                     logger.log(f"🎨 Tô màu dòng {row_num} trong file Excel.")
                     for cell in sheet[row_num]:
                         cell.fill = yellow_fill
 
-                    # 💾 Chỉ lưu mỗi 50 dòng (hoặc số khác bạn thích)
+                    # 💾 Lưu file gốc mỗi 50 dòng
                     if (i + 1) % 50 == 0:
                         try:
                             workbook.save(file_path)
-                            logger.log(f"💾 Đã lưu file sau khi xử lý {i+1} dòng.")
+                            logger.log(f"💾 Đã lưu file gốc sau khi xử lý {i+1} dòng.")
                         except Exception as save_err:
-                            logger.log(f"⚠️ Lỗi khi lưu file Excel: {save_err}")
+                            logger.log(f"⚠️ Lỗi khi lưu file Excel gốc: {save_err}")
 
+                        # Lưu file kết quả mỗi 50 bản ghi
+                        try:
+                            result_wb.save(result_path)
+                            logger.log(f"💾 Đã lưu file kết quả sau {i+1} thửa: {result_path}")
+                        except Exception as save_err:
+                            logger.log(f"⚠️ Lỗi khi lưu file Excel kết quả: {save_err}")
+
+                    # Nếu đã xử lý (xóa/bỏ) và modal tra cứu đã đóng, cần mở lại
                     if processed:
-                        # Modal tra cứu đã đóng sau khi xử lý. Mở lại để tìm thửa tiếp theo.
                         logger.log("🔄 Mở lại cửa sổ tra cứu cho thửa tiếp theo...")
                         tra_cuu_button = wait.until(EC.element_to_be_clickable((By.ID, "btnChonDonDangKy")))
-                        tra_cuu_button.click()
+                        try:
+                            tra_cuu_button.click()
+                        except ElementClickInterceptedException:
+                            logger.log("⚠️ Click bị chặn khi mở lại, thử lại bằng JavaScript...")
+                            driver.execute_script("arguments[0].click();", tra_cuu_button)
                         wait_tracuu_module_ready(driver, timeout=60)
 
                 # Sau khi xong hết vòng lặp, lưu lần cuối
                 try:
                     workbook.save(file_path)
-                    logger.log("✅ Đã lưu file Excel lần cuối sau khi hoàn tất toàn bộ.")
+                    logger.log("✅ Đã lưu file Excel gốc lần cuối sau khi hoàn tất toàn bộ.")
                 except Exception as save_err:
-                    logger.log(f"⚠️ Lỗi khi lưu file Excel lần cuối: {save_err}")
+                    logger.log(f"⚠️ Lỗi khi lưu file Excel gốc lần cuối: {save_err}")
+
+                try:
+                    result_wb.save(result_path)
+                    logger.log(f"✅ Đã lưu file Excel KẾT QUẢ lần cuối: {result_path}")
+                except Exception as save_err:
+                    logger.log(f"⚠️ Lỗi khi lưu file Excel KẾT QUẢ lần cuối: {save_err}")
                 
                 logger.log("✅✅✅ HOÀN TẤT TOÀN BỘ QUÁ TRÌNH! ✅✅✅")
 
