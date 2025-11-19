@@ -11,7 +11,8 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import (
     TimeoutException, ElementClickInterceptedException, JavascriptException,
-    StaleElementReferenceException, NoSuchElementException, ElementNotInteractableException
+    StaleElementReferenceException, NoSuchElementException, ElementNotInteractableException,
+    NoSuchWindowException
 )
 
 # ---- Tkinter GUI ----
@@ -1003,53 +1004,48 @@ def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
                     "div.jconfirm.jconfirm-open .jconfirm-scrollpane")))           
             # ---- POPUP 1: ĐỒNG Ý / KHÔNG ----
             try:
-                # chờ popup hiện
-                wait.until(EC.visibility_of_element_located((
-                    By.CSS_SELECTOR, "div.jconfirm.jconfirm-open .jconfirm-scrollpane"
-                )))
-
-                dongy_btn = wait.until(EC.element_to_be_clickable((
-                    By.CSS_SELECTOR,
-                    "div.jconfirm.jconfirm-open .jconfirm-buttons button.btn.btn-orange"
-                )))
+                # Chờ popup và nút "Đồng ý" (màu cam) xuất hiện và có thể click
+                dongy_selector = "div.jconfirm.jconfirm-open .jconfirm-buttons button.btn.btn-orange"
+                dongy_btn = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, dongy_selector)))
+                
                 print("👉 Popup xác nhận đã hiện, nhấn ĐỒNG Ý")
 
-                try:
-                    dongy_btn.click()
-                except ElementClickInterceptedException:
-                    driver.execute_script("arguments[0].click();", dongy_btn)                
-              
+                # Sử dụng JS click để tăng độ ổn định, vì click thường dễ bị chặn
+                driver.execute_script("arguments[0].click();", dongy_btn)
+
             except Exception as e:
                 print(f"❌ Không thấy hoặc không click được nút ĐỒNG Ý: {e}")
                 logger.log("❌ Không thấy popup xác nhận khi xóa.")
-                return True, "Lỗi khi xử lý thửa (không click được Đồng ý khi xóa)"
-            
+                # Thử nhấn phím ENTER như một phương án cuối
+                try:
+                    driver.switch_to.active_element.send_keys(Keys.ENTER)
+                    print("⌨️ Đã thử nhấn ENTER để xác nhận.")
+                except Exception as enter_e:
+                    print(f" Lỗi khi thử nhấn ENTER: {enter_e}")
+                    return True, "Lỗi khi xử lý thửa (không click được Đồng ý khi xóa)"
+
+            # Chờ AJAX xử lý và popup đóng lại
             wait_query_xoadon(driver, timeout=60)           
             wait_all_jconfirm_closed(driver, timeout=15)
 
-            # ---- POPUP 2: OK ----
+            # ---- POPUP 2: THÔNG BÁO THÀNH CÔNG (OK) ----
             try:
-                selector = (
-                    "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open "
-                    "div.jconfirm-buttons > button"
-                )
-                wait = WebDriverWait(driver, 60)
-                # Chờ element xuất hiện trong DOM
-                btn = wait.until(EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, selector)
-                ))
-
-                # Chờ nó hiển thị & clickable
-                btn = wait.until(EC.element_to_be_clickable(
-                    (By.CSS_SELECTOR, selector)
-                ))
-
-                btn.click()
-                print("👉 Đã nhấn nút OK jConfirm thành công") 
+                # Popup này thường chỉ có 1 nút, selector chung chung hơn
+                ok_selector = "div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open .jconfirm-buttons button"
+                
+                # Dùng wait lâu hơn vì đây là popup sau khi server xử lý
+                ok_wait = WebDriverWait(driver, 60)
+                ok_btn = ok_wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ok_selector)))
+                
+                print("👉 Popup thông báo thành công đã hiện, nhấn OK")
+                
+                # JS click cho ổn định
+                driver.execute_script("arguments[0].click();", ok_btn)
 
             except Exception as e:
-                print(f"❌ Không tìm thấy / không click được nút OK: {e}")
-                # vẫn tiếp tục chờ đóng popup phía dưới
+                print(f"ℹ️ Không thấy popup 'OK' sau khi xóa, hoặc đã tự đóng: {e}")
+                # Đây không phải lỗi nghiêm trọng, có thể popup không hiện hoặc đã tự đóng
+                # nên chỉ in ra thông báo và tiếp tục
             
             wait_all_jconfirm_closed(driver, timeout=15)
 
@@ -1085,6 +1081,12 @@ def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
 
             return success, note
 
+    except NoSuchWindowException:
+        error_message = "Lỗi: Cửa sổ trình duyệt đã bị đóng đột ngột."
+        logger.log(f"❌ {error_message} (Thửa {so_thua}, Tờ {so_to})")
+        # Không cần traceback đầy đủ cho lỗi này vì nó khá rõ ràng
+        # Ghi chú lỗi cụ thể và ngắn gọn
+        return True, "Lỗi (Cửa sổ đóng)"
     except Exception as ex:
         logger.log(f"❌ Có lỗi xảy ra khi xử lý thửa {so_thua}, tờ {so_to}: {ex}")
         logger.log(traceback.format_exc())
@@ -1307,10 +1309,13 @@ def main():
                     # Ghi vào file Excel KẾT QUẢ
                     result_ws.append([i+1, row_num, so_to, so_thua, note])
 
-                    # Tô màu dòng sau khi xử lý trong file gốc
-                    logger.log(f"🎨 Tô màu dòng {row_num} trong file Excel.")
-                    for cell in sheet[row_num]:
-                        cell.fill = yellow_fill
+                    # Tô màu dòng sau khi xử lý trong file gốc, chỉ khi không có lỗi
+                    if "Lỗi" not in note:
+                        logger.log(f"🎨 Tô màu dòng {row_num} trong file Excel.")
+                        for cell in sheet[row_num]:
+                            cell.fill = yellow_fill
+                    else:
+                        logger.log(f"⚠️ Bỏ qua tô màu cho dòng {row_num} do có lỗi.")
 
                     # 💾 Lưu file gốc mỗi 50 dòng
                     if (i + 1) % 50 == 0:
