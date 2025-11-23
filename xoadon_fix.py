@@ -66,6 +66,31 @@ def wait_xuly_modal(driver, timeout=20):
         pass
     return modal
 
+def auto_close_all_jconfirm(driver):
+    # Đóng popup tím
+    try:
+        btns = driver.find_elements(By.CSS_SELECTOR,
+            "div.jconfirm.jconfirm-open .jconfirm-buttons .btn.btn-purple"
+        )
+        for b in btns:
+            if b.is_displayed():
+                driver.execute_script("arguments[0].click();", b)
+                time.sleep(0.2)
+    except:
+        pass
+
+    # Đóng popup cam, popup default, popup success...
+    try:
+        btns = driver.find_elements(By.CSS_SELECTOR,
+            "div.jconfirm.jconfirm-open .jconfirm-buttons button"
+        )
+        for b in btns:
+            if b.is_displayed():
+                driver.execute_script("arguments[0].click();", b)
+                time.sleep(0.2)
+    except:
+        pass
+
 
 def wait_jstree_ready_in(container_el, timeout=20):
     end = time.time() + timeout
@@ -98,15 +123,14 @@ def wait_page_idle(driver, wait, extra_ms=300):
     time.sleep(extra_ms / 1000.0)
 
 
+YELLOW = "FFFFFF00"
+
 def row_is_highlighted(row):
-    """
-    True nếu dòng đã được tô màu (fill khác mặc định).
-    Chỉ duyệt những dòng CHƯA tô màu.
-    """
     for cell in row:
         fill = cell.fill
-        if fill is not None and fill.fill_type not in (None, "none"):
-            return True
+        if fill and fill.fill_type == "solid":
+            if fill.start_color and fill.start_color.rgb == YELLOW:
+                return True
     return False
 
 
@@ -154,6 +178,7 @@ def safe_click_row_css(driver, wait, row_css="#tblTraCuuDotBanGiao tbody tr", lo
         cell.click()
         return
     except ElementClickInterceptedException:
+        auto_close_all_jconfirm(driver)
         wait_page_idle(driver, wait, 300)
         try:
             cell.click()
@@ -422,50 +447,6 @@ def wait_processing_quick(driver, table_id="tblTTThuaDat", max_wait=6):
         return False
 
 
-def hard_jump_pagination(driver, page_number, table_id="tblTTThuaDat", timeout=10):
-    wait = WebDriverWait(driver, timeout)
-
-    cur = driver.execute_script(f"""
-        try {{
-            return jQuery('#{table_id}').DataTable().page.info().page + 1;
-        }} catch(e) {{ return 1; }}
-    """) or 1
-
-    if page_number == cur:
-        return True
-
-    try:
-        btn = wait.until(EC.presence_of_element_located((
-            By.XPATH, f"//div[@id='{table_id}_paginate']//a[normalize-space(text())='{page_number}']"
-        )))
-        driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn)
-        try:
-            btn.click()
-        except Exception:
-            driver.execute_script("arguments[0].click();", btn)
-    except TimeoutException:
-        step = 1 if page_number > cur else -1
-        next_sel = f"#{table_id}_next a"
-        prev_sel = f"#{table_id}_previous a"
-        while cur != page_number:
-            sel = next_sel if step == 1 else prev_sel
-            try:
-                a = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, sel)))
-                a.click()
-            except Exception:
-                driver.execute_script("document.querySelector(arguments[0])?.click()", sel)
-            wait_for_table_loaded(driver, table_id, timeout=10)
-            cur = driver.execute_script(f"return jQuery('#{table_id}').DataTable().page.info().page + 1;") or cur
-            if (step == 1 and cur < page_number) or (step == -1 and cur > page_number):
-                continue
-            if cur == page_number:
-                break
-
-    wait_for_table_loaded(driver, table_id, timeout=10)
-    cur2 = driver.execute_script(f"return jQuery('#{table_id}').DataTable().page.info().page + 1;")
-    return cur2 == page_number
-
-
 def all_jconfirm_closed(driver):
     modals = driver.find_elements(By.CSS_SELECTOR, ".jconfirm-scrollpane")
     if not modals:
@@ -644,7 +625,6 @@ def wait_query_done(driver, timeout=30, ajax_wait=5):
             return
         time.sleep(0.1)
 
-
 def wait_query_xoadon(driver, timeout=30, ajax_wait=5, max_after_first_ajax=10):
     try:
         WebDriverWait(driver, 3).until(
@@ -786,8 +766,29 @@ def retry_delete_confirm_if_jconfirm(driver, wait, logger: UILogger = None):
 
 
 # ====== SỬA HÀM CHỌN BẢN GHI ĐẦU TIÊN ======
+def clear_any_jconfirm_before_click(driver, logger: UILogger = None):
+    # Nếu còn jconfirm nào mở thì cố gắng bấm nút bất kỳ trong .jconfirm-buttons
+    modals = driver.find_elements(By.CSS_SELECTOR, "div.jconfirm.jconfirm-open")
+    if not modals:
+        return
+
+    if logger:
+        logger.log("⚠️ Trước khi click checkbox, phát hiện jConfirm đang mở – xử lý trước...")
+
+    try:
+        btn = driver.find_element(
+            By.CSS_SELECTOR,
+            "div.jconfirm.jconfirm-open .jconfirm-buttons button"
+        )
+        driver.execute_script("arguments[0].click();", btn)
+    except Exception:
+        pass
+
+    wait_all_jconfirm_closed(driver, timeout=10)
+
 def chon_ban_ghi_dau_tien(driver, timeout=30, logger: UILogger = None):
     wait = WebDriverWait(driver, timeout)
+    clear_any_jconfirm_before_click(driver, logger=logger)
 
     first_row = wait.until(
         EC.presence_of_element_located(
@@ -951,7 +952,7 @@ def perform_bo_don(driver, wait, logger: UILogger, reason="", so_to=None, so_thu
     except Exception as e:
         logger.log(f"❌ Lỗi trong quá trình 'Bỏ đơn': {e}")
         print(f"❌ Lỗi trong quá trình 'Bỏ đơn': {e}")
-        return True
+        return False
     
 def wait_click_vbdlis_jconfirm(
     driver,
@@ -1044,21 +1045,134 @@ def wait_click_vbdlis_jconfirm(
         if logger:
             logger.log(f"❌ Lỗi khi xử lý popup jConfirm: {e}")
         return False
+    
+def wait_mortgage_popup(driver, timeout=1.2):
+    wait = WebDriverWait(driver, timeout)
+    try:
+        popup = wait.until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, "div.jconfirm-open .jconfirm-message")
+            )
+        )
+        msg = popup.text.lower()
+        return "thế chấp" in msg
+    except:
+        return False    
 
+def process_all_records_in_search_table(driver, wait, logger, so_to, so_thua, total):
+    auto_close_all_jconfirm(driver)
 
-def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
-    """
-    Thực hiện tìm kiếm và xử lý một thửa đất trong modal tra cứu đã mở.
+    if total == 0:
+        return 0
 
-    Trả về:
-        processed (bool): True nếu đã có hành động (xóa/bỏ) làm đóng modal.
-        note (str): ghi chú để ghi ra file Excel kết quả, gồm:
-            - "Không tìm thấy bản ghi"
-            - "Bỏ đơn do có dữ liệu"
-            - "bỏ đơn do có mã GCN {mã gcn}"
-            - "Đã xóa đơn"
-            - hoặc "Lỗi khi xử lý thửa ..." (trường hợp ngoại lệ)
-    """
+    processed = 0
+    notes = []
+
+    for idx in range(1, total + 1):
+        action_taken = None # Để biết hành động là 'xóa' hay 'bỏ đơn'
+        note_for_record = f"Bản ghi {idx}: "
+        logger.log(f"➡️  Đang xử lý bản ghi {idx}/{total}")
+
+        try:
+            # Chọn dòng tương ứng trong bảng
+            row_css = f"#tblTraCuuTinhHinhDangKy tbody tr:nth-child({idx})"
+            checkbox = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, row_css + " td.select-checkbox")))
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", checkbox)
+            checkbox.click()
+
+            # Nhấn nút "Chọn"
+            btn_chon = wait.until(EC.element_to_be_clickable((By.ID, "btnLuuChonTinhHinhDangKy")))
+            driver.execute_script("arguments[0].click();", btn_chon)
+
+            # Đợi modal tra cứu đóng lại
+            wait.until(EC.invisibility_of_element_located((By.ID, "donDangKyTraCuuModule")))
+            wait_query_done(driver, timeout=60)
+            # 🔥 Sang thẻ GCN để xử lý
+            click_step_GiayChungNhan(driver)
+            status, gcn_code, raw = kiem_tra_tree_gcn(driver)
+
+            # ===== XỬ LÝ TÙY THEO LOẠI =====
+
+            # === TRƯỜNG HỢP A: KHÔNG CÓ GCN -> XÓA ĐƠN ===
+            if status == "no_data":
+                logger.log("   👉 GCN: Không có dữ liệu. Tiến hành XÓA ĐƠN.")
+                try:
+                    btn_xoa = wait.until(EC.element_to_be_clickable((By.ID, "btnXoaDonDangKy")))
+                    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn_xoa)
+                    btn_xoa.click()
+                    logger.log("👉 Đã nhấn nút 'Xóa đơn đăng ký'.")
+
+                    # ---- POPUP 1: Xác nhận 'Đồng ý' (nút cam) ----
+                    ok1 = wait_click_vbdlis_jconfirm(
+                        driver, timeout=30, logger=logger,
+                        css_button="div.jconfirm-open .jconfirm-buttons button.btn.btn-orange"
+                    )
+
+                    if not ok1:
+                        raise Exception("Không xử lý được popup 'Xác nhận xóa'.")
+
+                    # Kiểm tra popup thế chấp
+                    if wait_mortgage_popup(driver, timeout=3):
+                        logger.log("   ⚠️ Phát hiện popup GCN đang thế chấp -> chuyển sang BỎ ĐƠN.")
+                        wait_click_vbdlis_jconfirm(driver, timeout=10, logger=logger, css_button="div.jconfirm-buttons > button.btn.btn-orange")
+                        if perform_bo_don(driver, wait, logger, reason="Đang thế chấp GCN.", so_to=so_to, so_thua=so_thua, gcn_code=gcn_code):
+                            action_taken = "bỏ đơn (thế chấp)"
+                            note_for_record += "Bỏ đơn do thế chấp."
+                    else:
+                        # ---- POPUP 2: Thông báo thành công (nút OK) ----
+                        wait_click_vbdlis_jconfirm(driver, timeout=20, logger=logger, css_button="div.jconfirm-open .jconfirm-buttons button")
+                        action_taken = "xóa"
+                        note_for_record += "Đã xóa đơn."
+
+                except Exception as e:
+                    logger.log(f"   ❌ Lỗi trong quá trình xóa đơn: {e}")
+                    note_for_record += f"Lỗi khi xóa: {e}"
+
+            # === TRƯỜNG HỢP B: CÓ GCN -> BỎ ĐƠN ===
+            else: # status is "has_gcn" or "has_data"
+                reason = ""
+                if status == "has_gcn":
+                    reason = f"Thửa đất đã có GCN ({gcn_code})."
+                    note_for_record += f"Bỏ đơn do có GCN {gcn_code}."
+                else: # has_data
+                    reason = "Thửa đất có dữ liệu GCN (không có số phát hành)."
+                    note_for_record += "Bỏ đơn do có dữ liệu GCN."
+                
+                logger.log(f"   👉 GCN: {reason} Tiến hành BỎ ĐƠN.")
+                success = perform_bo_don(driver, wait, logger, reason=reason, so_to=so_to, so_thua=so_thua, gcn_code=gcn_code)
+                if success:
+                    action_taken = "bỏ đơn"
+                else:
+                    note_for_record += " Lỗi khi bỏ đơn."
+
+            # Ghi nhận kết quả và quay lại
+            if action_taken:
+                processed += 1
+            
+            notes.append(note_for_record)
+
+            # Nếu là bản ghi cuối cùng, không cần mở lại tra cứu
+            if idx == total:
+                break
+
+            # Mở lại cửa sổ tra cứu cho bản ghi tiếp theo
+            logger.log("   🔄 Mở lại cửa sổ tra cứu...")
+            try:
+                tra_cuu_button = wait.until(EC.element_to_be_clickable((By.ID, "btnChonDonDangKy")))
+                driver.execute_script("arguments[0].click();", tra_cuu_button)
+                wait_tracuu_module_ready(driver, timeout=60)
+            except Exception as e:
+                logger.log(f"   ❌ Lỗi nghiêm trọng khi mở lại cửa sổ tra cứu: {e}")
+                raise Exception("Không thể mở lại cửa sổ tra cứu.") # Dừng hẳn
+
+        except (NoSuchWindowException, Exception) as e:
+            logger.log(f"❌ Lỗi nghiêm trọng khi xử lý bản ghi {idx}: {e}")
+            notes.append(f"Bản ghi {idx}: Lỗi nghiêm trọng - {e}")
+            continue
+
+    return processed, " | ".join(notes)
+
+def search_and_process_plot(driver, wait, logger, so_to, so_thua):
     try:
         # --- Nhập liệu và tìm kiếm ---
         so_thua_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,
@@ -1075,119 +1189,36 @@ def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
 
         so_thua_input.send_keys(Keys.ENTER)
 
-        # Chờ vùng tra cứu + DataTables load xong
-        wait_tracuu_section_ready(driver, timeout=60)
+        # Chờ bảng load
+        wait_tracuu_section_ready(driver)
         WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.ID, "tblTraCuuTinhHinhDangKy_info"))
         )
-        wait_query_done(driver, timeout=60)
-        so_ban_ghi = wait_and_count_tblTraCuu(driver)
-        logger.log(
-            f"✅ Đã nhập Số tờ: {so_to}, Số thửa: {so_thua}. "
-            f"Số bản ghi tìm được: {so_ban_ghi}."
+        wait_query_done(driver)
+        auto_close_all_jconfirm(driver)
+
+        # Đếm số bản ghi
+        total_records = wait_and_count_tblTraCuu(driver)
+        logger.log(f"🔎 Tìm thấy {total_records} bản ghi.")
+
+        if total_records == 0:
+            return True, "Không tìm thấy bản ghi"
+
+        # === XỬ LÝ TẤT CẢ BẢN GHI ===
+        processed_count, notes_str = process_all_records_in_search_table(
+            driver, wait, logger, so_to, so_thua, total=total_records
         )
 
-        if so_ban_ghi == 0:
-            logger.log("❌ Không tìm thấy bản ghi nào. Tìm thửa tiếp theo...")
-            return False, "Không tìm thấy bản ghi"
+        # processed_count > 0 có nghĩa là ít nhất 1 hành động đã được thực hiện
+        # và modal xử lý đơn đã đóng.
+        # Nếu processed_count == 0, có thể tất cả đều lỗi và vẫn đang ở màn hình tra cứu.
+        # Luôn trả về True để vòng lặp chính biết cần mở lại cửa sổ tra cứu.
+        final_note = f"Tổng: {processed_count}/{total_records} thành công. Chi tiết: {notes_str}"
+        return True, final_note
 
-        # --- Tìm thấy, xử lý ---
-        chon_ban_ghi_dau_tien(driver, timeout=30, logger=logger)
-        wait_query_done(driver, timeout=60)
-
-        # Chuyển sang tab Giấy chứng nhận
-        click_step_GiayChungNhan(driver, timeout=30)
-        WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.ID, "treeGiayChungNhan"))
-        )
-
-        status, gcn_code, raw_text = kiem_tra_tree_gcn(driver)
-        if status == "no_data":
-            logger.log("👉 Kết quả kiểm tra GCN: Không có dữ liệu (sẽ XÓA ĐƠN).")
-        elif status == "has_gcn":
-            logger.log(f"👉 Kết quả kiểm tra GCN: Có mã GCN {gcn_code} (sẽ BỎ ĐƠN).")
-        else:
-            logger.log(
-                "👉 Kết quả kiểm tra GCN: Có dữ liệu nhưng không có 'Số phát hành' (sẽ BỎ ĐƠN)."
-            )
-
-        # ================== TRƯỜNG HỢP KHÔNG CÓ DỮ LIỆU -> XÓA ĐƠN ==================
-        if status == "no_data":
-            try:
-                btn_xoa = wait.until(
-                    EC.element_to_be_clickable((By.ID, "btnXoaDonDangKy"))
-                )
-                driver.execute_script(
-                    "arguments[0].scrollIntoView({block:'center'});", btn_xoa
-                )
-                btn_xoa.click()
-                logger.log("👉 Đã nhấn nút 'Xóa đơn đăng ký'.")
-            except Exception as e:
-                logger.log(f"❌ Không tìm thấy hoặc không click được nút Xóa đơn đăng ký: {e}")
-                return True, "Lỗi khi xử lý thửa (không click được nút Xóa đơn đăng ký)"
-
-            # ---- POPUP 1: Xác nhận 'Đồng ý' (nút cam) ----
-            ok1 = wait_click_vbdlis_jconfirm(
-                driver,
-                timeout=30,
-                logger=logger,
-                css_button=(
-                    "body > div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open "
-                    "> div.jconfirm-scrollpane > div > div > div > div "
-                    "> div.jconfirm-buttons > button.btn.btn-orange"
-                )
-            )
-
-            if not ok1:
-                logger.log("⚠️ Không xử lý được popup 'Xác nhận xóa/bỏ đơn đăng ký'.")
-                return True, "Lỗi khi xử lý thửa (không xử lý được popup Đồng ý khi xóa)"
-
-            # Có thể MPLIS hiện thêm popup thông báo (OK) – xử lý nếu có
-            wait_click_vbdlis_jconfirm(
-                driver,
-                timeout=20,
-                logger=logger,
-                css_button=(
-                    "body > div.jconfirm.jconfirm-vbdlis-theme.jconfirm-open "
-                    "> div.jconfirm-scrollpane > div > div > div > div "
-                    "> div.jconfirm-buttons > button"
-                )
-            )
-
-            # Đảm bảo không còn jConfirm nào che
-            wait_all_jconfirm_closed(driver, timeout=10)
-
-            # Ghi chú kết quả
-            return True, "Đã xóa đơn"
-
-        # ================== TRƯỜNG HỢP CÓ DỮ LIỆU -> BỎ ĐƠN ==================
-        else:
-            if status == "has_gcn":
-                # Thửa đất có GCN cụ thể
-                success = perform_bo_don(
-                    driver,
-                    wait,
-                    logger,
-                    reason="Thửa đất đã có GCN.",
-                    so_to=so_to,
-                    so_thua=so_thua,
-                    gcn_code=gcn_code,
-                )
-                note = f"bỏ đơn do có mã GCN {gcn_code}"
-            else:
-                # Có dữ liệu nhưng không có số phát hành
-                success = perform_bo_don(
-                    driver,
-                    wait,
-                    logger,
-                    reason="Thửa đất có dữ liệu GCN (không có số phát hành).",
-                    so_to=so_to,
-                    so_thua=so_thua,
-                    gcn_code=None,
-                )
-                note = "Bỏ đơn do có dữ liệu"
-
-            return success, note
+    except Exception as e:
+        logger.log(f"❌ Lỗi khi xử lý thửa {so_thua}, tờ {so_to}: {e}")
+        return True, f"Lỗi khi xử lý thửa tờ {so_to}, thửa {so_thua}"
 
     except NoSuchWindowException:
         error_message = "Lỗi: Cửa sổ trình duyệt đã bị đóng đột ngột."
@@ -1199,7 +1230,6 @@ def search_and_process_plot(driver, wait, logger: UILogger, so_to, so_thua):
         )
         logger.log(traceback.format_exc())
         return True, f"Lỗi khi xử lý thửa tờ {so_to}, thửa {so_thua}"
-
 
 # ============== TKINTER UI ==============
 def main():
@@ -1379,8 +1409,7 @@ def main():
                 options = Options()
                 options.add_argument("--start-maximized")
                 options.add_experimental_option("detach", True)
-                service = Service(ChromeDriverManager().install())
-                driver = webdriver.Chrome(service=service, options=options)
+                driver = webdriver.Chrome(options=options)
                 wait = WebDriverWait(driver, 20)
 
                 driver.get(base_url)
@@ -1421,14 +1450,14 @@ def main():
                 for i, (row_num, so_to, so_thua) in enumerate(plots_to_process):
                     log.log(f"--- Xử lý thửa {i+1}/{len(plots_to_process)}: Tờ {so_to}, Thửa {so_thua} (Dòng {row_num}) ---")
 
-                    processed, note = search_and_process_plot(driver, wait, log, so_to, so_thua)
+                    was_processed, note = search_and_process_plot(driver, wait, log, so_to, so_thua)
                     log.log(f"📌 Ghi chú kết quả: {note}")
 
                     stt = next_stt
                     result_ws.append([stt, row_num, so_to, so_thua, note])
                     next_stt += 1
 
-                    if not str(note).lower().startswith("lỗi"):
+                    if was_processed and not str(note).strip().lower().startswith("lỗi"):
                         log.log(f"🎨 Tô màu dòng {row_num} trong file Excel.")
                         for cell in sheet[row_num]:
                             cell.fill = yellow_fill
@@ -1448,21 +1477,17 @@ def main():
                         except Exception as save_err:
                             log.log(f"⚠️ Lỗi khi lưu file Excel kết quả: {save_err}")
 
-                    if processed:
-                        log.log("🔄 Mở lại cửa sổ tra cứu cho thửa tiếp theo...")
+                    # Mở lại cửa sổ tra cứu cho thửa tiếp theo
+                    log.log(f"🔄 Chuẩn bị cho thửa tiếp theo...")
+                    try:
                         tra_cuu_button = wait.until(EC.element_to_be_clickable((By.ID, "btnChonDonDangKy")))
-                        try:
-                            tra_cuu_button.click()
-                        except ElementClickInterceptedException:
-                            log.log("⚠️ Click bị chặn khi mở lại, kiểm tra popup jConfirm...")
-                            if close_blocking_jconfirm_vbdlis(driver, timeout=5):
-                                log.log("✅ Đã đóng popup, JS click lại btnChonDonDangKy...")
-                                tra_cuu_button = wait.until(EC.element_to_be_clickable((By.ID, "btnChonDonDangKy")))
-                                driver.execute_script("arguments[0].click();", tra_cuu_button)
-                            else:
-                                log.log("⚠️ Không đóng được popup, dùng JS click thẳng.")
-                                driver.execute_script("arguments[0].click();", tra_cuu_button)
+                        driver.execute_script("arguments[0].click();", tra_cuu_button)
                         wait_tracuu_module_ready(driver, timeout=60)
+                    except Exception as e:
+                        log.log(f"❌ Lỗi nghiêm trọng khi mở lại cửa sổ tra cứu: {e}")
+                        log.log("--- DỪNG QUÁ TRÌNH XỬ LÝ ---")
+                        messagebox.showerror("Lỗi nghiêm trọng", f"Không thể mở lại cửa sổ tra cứu. Vui lòng kiểm tra lại.\nLỗi: {e}")
+                        break # Thoát khỏi vòng lặp
 
                 try:
                     workbook.save(file_path)
