@@ -67,29 +67,25 @@ def wait_xuly_modal(driver, timeout=20):
     return modal
 
 def auto_close_all_jconfirm(driver):
-    # Đóng popup tím
     try:
-        btns = driver.find_elements(By.CSS_SELECTOR,
-            "div.jconfirm.jconfirm-open .jconfirm-buttons .btn.btn-purple"
-        )
-        for b in btns:
-            if b.is_displayed():
-                driver.execute_script("arguments[0].click();", b)
+        buttons = driver.find_elements(By.CSS_SELECTOR, "div.jconfirm.jconfirm-open .jconfirm-buttons button")
+        for btn in reversed(buttons):
+            if btn.is_displayed():
+                driver.execute_script("arguments[0].click();", btn)
                 time.sleep(0.2)
-    except:
+    except Exception:
         pass
 
-    # Đóng popup cam, popup default, popup success...
+def wait_all_jconfirm_closed(driver, timeout=15):
     try:
-        btns = driver.find_elements(By.CSS_SELECTOR,
-            "div.jconfirm.jconfirm-open .jconfirm-buttons button"
+        WebDriverWait(driver, timeout).until(
+            lambda d: not d.find_elements(By.CSS_SELECTOR, "div.jconfirm.jconfirm-open")
         )
-        for b in btns:
-            if b.is_displayed():
-                driver.execute_script("arguments[0].click();", b)
-                time.sleep(0.2)
-    except:
-        pass
+    except TimeoutException:
+        auto_close_all_jconfirm(driver)
+        WebDriverWait(driver, timeout).until(
+            lambda d: not d.find_elements(By.CSS_SELECTOR, "div.jconfirm.jconfirm-open")
+        )
 
 
 def wait_jstree_ready_in(container_el, timeout=20):
@@ -447,24 +443,26 @@ def wait_processing_quick(driver, table_id="tblTTThuaDat", max_wait=6):
         return False
 
 
-def all_jconfirm_closed(driver):
-    modals = driver.find_elements(By.CSS_SELECTOR, ".jconfirm-scrollpane")
-    if not modals:
-        return True
-    for m in modals:
-        try:
-            if m.is_displayed():
-                return False
-        except Exception:
-            continue
-    return True
-
+def auto_close_all_jconfirm(driver):
+    try:
+        buttons = driver.find_elements(By.CSS_SELECTOR, "div.jconfirm.jconfirm-open .jconfirm-buttons button")
+        for btn in reversed(buttons):
+            if btn.is_displayed():
+                driver.execute_script("arguments[0].click();", btn)
+                time.sleep(0.2)
+    except Exception:
+        pass
 
 def wait_all_jconfirm_closed(driver, timeout=15):
     try:
-        WebDriverWait(driver, timeout).until(lambda d: all_jconfirm_closed(d))
+        WebDriverWait(driver, timeout).until(
+            lambda d: not d.find_elements(By.CSS_SELECTOR, "div.jconfirm.jconfirm-open")
+        )
     except TimeoutException:
-        pass
+        auto_close_all_jconfirm(driver)
+        WebDriverWait(driver, timeout).until(
+            lambda d: not d.find_elements(By.CSS_SELECTOR, "div.jconfirm.jconfirm-open")
+        )
 
 
 def switch_to_frame_having(driver, by, value, timeout=8):
@@ -1060,7 +1058,6 @@ def wait_mortgage_popup(driver, timeout=1.2):
         return False    
 
 def process_all_records_in_search_table(driver, wait, logger, so_to, so_thua, total):
-    auto_close_all_jconfirm(driver)
 
     if total == 0:
         return 0
@@ -1158,12 +1155,12 @@ def process_all_records_in_search_table(driver, wait, logger, so_to, so_thua, to
             # Mở lại cửa sổ tra cứu cho bản ghi tiếp theo
             logger.log("   🔄 Mở lại cửa sổ tra cứu...")
             try:
+                wait_all_jconfirm_closed(driver, timeout=10)
                 tra_cuu_button = wait.until(EC.element_to_be_clickable((By.ID, "btnChonDonDangKy")))
                 driver.execute_script("arguments[0].click();", tra_cuu_button)
-                wait_tracuu_module_ready(driver, timeout=60)
             except Exception as e:
-                logger.log(f"   ❌ Lỗi nghiêm trọng khi mở lại cửa sổ tra cứu: {e}")
-                raise Exception("Không thể mở lại cửa sổ tra cứu.") # Dừng hẳn
+                wait_all_jconfirm_closed(driver, timeout=10)
+                break # Dừng xử lý các bản ghi còn lại của thửa này
 
         except (NoSuchWindowException, Exception) as e:
             logger.log(f"❌ Lỗi nghiêm trọng khi xử lý bản ghi {idx}: {e}")
@@ -1173,7 +1170,9 @@ def process_all_records_in_search_table(driver, wait, logger, so_to, so_thua, to
     return processed, " | ".join(notes)
 
 def search_and_process_plot(driver, wait, logger, so_to, so_thua):
+    wait_all_jconfirm_closed(driver, timeout=10)
     try:
+        wait_all_jconfirm_closed(driver, timeout=10)
         # --- Nhập liệu và tìm kiếm ---
         so_thua_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,
             "#dvTraCuuTinhHinhDangKyChiTiet > div:nth-child(2) > div.col-md-8.col-sm-12 > fieldset > div:nth-child(2) > div:nth-child(1) > div > input"
@@ -1188,15 +1187,13 @@ def search_and_process_plot(driver, wait, logger, so_to, so_thua):
         so_to_input.send_keys(so_to)
 
         so_thua_input.send_keys(Keys.ENTER)
-
+        wait_query_done(driver)
         # Chờ bảng load
         wait_tracuu_section_ready(driver)
         WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.ID, "tblTraCuuTinhHinhDangKy_info"))
         )
-        wait_query_done(driver)
-        auto_close_all_jconfirm(driver)
-
+        
         # Đếm số bản ghi
         total_records = wait_and_count_tblTraCuu(driver)
         logger.log(f"🔎 Tìm thấy {total_records} bản ghi.")
@@ -1218,18 +1215,18 @@ def search_and_process_plot(driver, wait, logger, so_to, so_thua):
 
     except Exception as e:
         logger.log(f"❌ Lỗi khi xử lý thửa {so_thua}, tờ {so_to}: {e}")
-        return True, f"Lỗi khi xử lý thửa tờ {so_to}, thửa {so_thua}"
+        return False, f"Lỗi khi xử lý thửa tờ {so_to}, thửa {so_thua}"
 
     except NoSuchWindowException:
         error_message = "Lỗi: Cửa sổ trình duyệt đã bị đóng đột ngột."
         logger.log(f"❌ {error_message} (Thửa {so_thua}, Tờ {so_to})")
-        return True, "Lỗi (Cửa sổ đóng)"
+        return False, "Lỗi (Cửa sổ đóng)"
     except Exception as ex:
         logger.log(
             f"❌ Có lỗi xảy ra khi xử lý thửa {so_thua}, tờ {so_to}: {ex}"
         )
         logger.log(traceback.format_exc())
-        return True, f"Lỗi khi xử lý thửa tờ {so_to}, thửa {so_thua}"
+        return False, f"Lỗi khi xử lý thửa tờ {so_to}, thửa {so_thua}"
 
 # ============== TKINTER UI ==============
 def main():
@@ -1457,7 +1454,7 @@ def main():
                     result_ws.append([stt, row_num, so_to, so_thua, note])
                     next_stt += 1
 
-                    if was_processed and not str(note).strip().lower().startswith("lỗi"):
+                    if was_processed and "lỗi" not in str(note).strip().lower():
                         log.log(f"🎨 Tô màu dòng {row_num} trong file Excel.")
                         for cell in sheet[row_num]:
                             cell.fill = yellow_fill
