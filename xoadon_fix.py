@@ -699,6 +699,31 @@ def close_blocking_jconfirm_vbdlis(driver, timeout=5):
         return False
 
 
+# ====== HỖ TRỢ ĐĂNG NHẬP ======
+def get_login_fields(wait):
+    """
+    Lấy các trường username và password với selector fallback.
+    Hỗ trợ cả autocomplete và name attribute.
+    """
+    username_box = wait.until(
+        EC.presence_of_element_located(
+            (
+                By.CSS_SELECTOR,
+                "input[autocomplete='username'], input[name='username']",
+            )
+        )
+    )
+    password_box = wait.until(
+        EC.presence_of_element_located(
+            (
+                By.CSS_SELECTOR,
+                "input[autocomplete='current-password'], input[name='password']",
+            )
+        )
+    )
+    return username_box, password_box
+
+
 # ====== RETRY POPUP XÓA ĐƠN (ĐỒNG Ý/OK) ======
 def retry_delete_confirm_if_jconfirm(driver, wait, logger: UILogger = None):
     try:
@@ -1412,9 +1437,10 @@ def main():
                 driver.get(base_url)
                 log.log(f"🌐 Mở trang: {base_url}")
 
-                wait.until(EC.presence_of_element_located((By.NAME, "username"))).send_keys(username)
-                driver.find_element(By.NAME, "password").send_keys(password)
-                driver.find_element(By.NAME, "password").send_keys(Keys.ENTER)
+                username_box, password_box = get_login_fields(wait)
+                username_box.send_keys(username)
+                password_box.send_keys(password)
+                password_box.send_keys(Keys.ENTER)
                 log.log("🔐 Đang đăng nhập…")
                 messagebox.showinfo(
                     "Xác minh",
